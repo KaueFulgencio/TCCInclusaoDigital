@@ -15,7 +15,11 @@ const PixScreen: React.FC<PixScreenProps> = ({ navigation }) => {
     colors, 
     incrementClickCount,
     recordScreenTransition,
-    endCurrentSession
+    endCurrentSession,
+    startNewSession,
+    saveTransactionToFirebase,
+    uploadAnalyticsToFirebase,
+    analytics
   } = useAccessibility();
   
   const [amount, setAmount] = useState('');
@@ -25,7 +29,6 @@ const PixScreen: React.FC<PixScreenProps> = ({ navigation }) => {
   const [showContacts, setShowContacts] = useState(false);
   const [currentTime, setCurrentTime] = useState('');
 
-  // Lista de contatos fictícios
   const contacts = [
     { id: 1, name: 'João Silva', key: '123.456.789-00', keyType: 'CPF' },
     { id: 2, name: 'Maria Souza', key: 'maria.souza@email.com', keyType: 'E-mail' },
@@ -34,7 +37,6 @@ const PixScreen: React.FC<PixScreenProps> = ({ navigation }) => {
     { id: 5, name: 'Ana Santos', key: '987.654.321-00', keyType: 'CPF' },
   ];
 
-  // Formata o valor monetário
   const formatCurrency = (value: string) => {
     let numericValue = value.replace(/\D/g, '');
     numericValue = numericValue.padStart(3, '0');
@@ -58,13 +60,47 @@ const PixScreen: React.FC<PixScreenProps> = ({ navigation }) => {
     }));
   }, []);
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     incrementClickCount();
+    
     if (step < 3) {
       setStep(step + 1);
     } else {
+      // Finaliza a sessão e salva os dados
       endCurrentSession();
-      navigation.navigate('Success');
+      
+      try {
+        // Primeiro salva a transação
+        const transactionSaved = await saveTransactionToFirebase({
+          amount: formattedAmount,
+          pixKey: pixKey,
+          userId: "testUser123", 
+          type: "PIX",
+          status: "completed"
+        });
+        
+        if (transactionSaved) {
+          // Depois envia os analytics
+          const analyticsSent = await uploadAnalyticsToFirebase("testUser123");
+          
+          if (analyticsSent) {
+            // Inicia uma nova sessão limpa
+            startNewSession();
+            
+            // Navega para tela de sucesso
+            navigation.navigate('Success');
+          } else {
+            console.error("Falha ao enviar analytics");
+            alert("Ocorreu um erro ao registrar os dados de uso");
+          }
+        } else {
+          console.error("Falha ao salvar transação");
+          alert("Ocorreu um erro ao processar sua transação");
+        }
+      } catch (error) {
+        console.error("Erro ao processar transação:", error);
+        alert("Ocorreu um erro durante o processamento");
+      }
     }
   };
 
@@ -523,3 +559,15 @@ const styles = StyleSheet.create({
 });
 
 export default PixScreen;
+
+function uploadAnalyticsToFirebase(arg0: string) {
+  throw new Error('Function not implemented.');
+}
+function startNewSession() {
+  throw new Error('Function not implemented.');
+}
+
+function saveTransactionToFirebase(arg0: { amount: string; pixKey: string; userId: string; type: string; status: string; }) {
+  throw new Error('Function not implemented.');
+}
+

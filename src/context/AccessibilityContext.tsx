@@ -1,8 +1,22 @@
-import React, { createContext, useState, useContext, useEffect } from "react";
+import React, {
+  createContext,
+  useState,
+  useContext,
+  useEffect,
+  useMemo,
+} from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system";
 import { db } from "../../firebase";
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+
+type TransactionData = {
+  amount: string;
+  pixKey: string;
+  userId: string;
+  type: string;
+  status: string;
+};
 
 type AccessibilitySettings = {
   fontSize: number;
@@ -57,7 +71,9 @@ type AccessibilityContextType = {
   recordScreenTransition: (screenName: string) => void;
   endCurrentSession: () => void;
   exportCompleteSessionData: () => Promise<any>;
-  uploadAnalyticsToFirebase: () => Promise<void>;
+  saveUserToFirebase: (userData: any) => Promise<boolean>;
+  saveTransactionToFirebase: (transactionData: any) => Promise<boolean>;
+  uploadAnalyticsToFirebase: (userId?: string) => Promise<boolean>;
 };
 
 const defaultSettings: AccessibilitySettings = {
@@ -104,7 +120,9 @@ const AccessibilityContext = createContext<AccessibilityContextType>({
   recordScreenTransition: () => {},
   endCurrentSession: () => {},
   exportCompleteSessionData: async () => null,
-  uploadAnalyticsToFirebase: async () => {},
+  uploadAnalyticsToFirebase: async () => false,
+  saveUserToFirebase: async () => false,
+  saveTransactionToFirebase: async () => false,
 });
 
 export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -115,22 +133,66 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
   const [analytics, setAnalytics] = useState<AnalyticsData>(defaultAnalytics);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  const uploadAnalyticsToFirebase = async () => {
+  const saveUserToFirebase = async (userData: any) => {
     try {
+      await addDoc(collection(db, "users"), {
+        ...userData,
+        settings: settings,
+        lastAccess: serverTimestamp(),
+        createdAt: serverTimestamp(),
+      });
+      console.log("Usuário salvo no Firebase com sucesso!");
+      return true;
+    } catch (error) {
+      console.error("Erro ao salvar usuário no Firebase:", error);
+      return false;
+    }
+  };
+
+  const saveTransactionToFirebase = async (
+    transactionData: TransactionData
+  ) => {
+    try {
+      await addDoc(collection(db, "transactions"), {
+        ...transactionData,
+        settings: settings,
+        analytics: {
+          clickCount: analytics.clickCount,
+          executionTime: analytics.executionTime,
+        },
+        timestamp: serverTimestamp(),
+      });
+      console.log("Transação salva no Firebase com sucesso!");
+      return true;
+    } catch (error) {
+      console.error("Erro ao salvar transação no Firebase:", error);
+      return false;
+    }
+  };
+
+  const uploadAnalyticsToFirebase = async (userId?: string) => {
+    try {
+      const sessionDuration = analytics.currentSession.endTime
+        ? (analytics.currentSession.endTime -
+            analytics.currentSession.startTime) /
+          1000
+        : null;
+
       const dataToSend = {
-        ...analytics,
-        timestamp: new Date().toISOString(),
-        sessionDuration: analytics.currentSession.endTime
-          ? (analytics.currentSession.endTime -
-              analytics.currentSession.startTime) /
-            1000
-          : null,
+        userId: userId || "anonymous",
+        settings: settings,
+        clickCount: analytics.clickCount,
+        sessionDuration,
+        screenFlow: analytics.currentSession.screenFlow,
+        timestamp: serverTimestamp(),
       };
 
       await addDoc(collection(db, "analytics"), dataToSend);
       console.log("Analytics enviados para o Firebase com sucesso!");
+      return true;
     } catch (error) {
       console.error("Erro ao enviar analytics para o Firebase:", error);
+      return false;
     }
   };
 
@@ -207,6 +269,7 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
   const startNewSession = () => {
     setAnalytics((prev) => ({
       ...prev,
+      clickCount: 0,
       currentSession: {
         startTime: Date.now(),
         endTime: null,
@@ -231,7 +294,7 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
       const sessionDuration = (endTime - prev.currentSession.startTime) / 1000;
       return {
         ...prev,
-        executionTime: prev.executionTime + sessionDuration,
+        executionTime: sessionDuration,
         currentSession: {
           ...prev.currentSession,
           endTime,
@@ -318,6 +381,32 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     : defaultColors;
 
+  const contextValue = useMemo(
+    () => ({
+      settings,
+      colors,
+      analytics,
+      updateSettings,
+      incrementClickCount,
+      updateExecutionTime,
+      exportAnalytics,
+      listSavedAnalytics,
+      clearAnalytics,
+      startNewSession,
+      recordScreenTransition,
+      endCurrentSession,
+      exportCompleteSessionData,
+      uploadAnalyticsToFirebase,
+      saveUserToFirebase,
+      saveTransactionToFirebase,
+    }),
+    [
+      settings,
+      colors,
+      analytics,
+    ]
+  );
+  
   return (
     <AccessibilityContext.Provider
       value={{
@@ -335,6 +424,8 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
         endCurrentSession,
         exportCompleteSessionData,
         uploadAnalyticsToFirebase,
+        saveUserToFirebase,
+        saveTransactionToFirebase,
       }}
     >
       {children}

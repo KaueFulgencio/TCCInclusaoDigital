@@ -1,24 +1,74 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { Button } from "react-native-paper";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../navigation/types";
 import { useAccessibility } from "../context/AccessibilityContext";
-import { collection, addDoc } from 'firebase/firestore';
-import { db } from "../../firebase"; 
 
 type HomeScreenProps = {
   navigation: StackNavigationProp<RootStackParamList, "Home">;
 };
 
 const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
-  const { settings, analytics } = useAccessibility();
+  const { 
+    settings, 
+    analytics, 
+    uploadAnalyticsToFirebase,
+    saveUserToFirebase,
+    saveTransactionToFirebase
+  } = useAccessibility();
+  
   const { fontSize, highContrast, zoomEnabled } = settings;
   const { executionTime, clickCount, lastAccessed } = analytics;
 
-  const { uploadAnalyticsToFirebase } = useAccessibility();
+  // Use useCallback para memoizar as funções e evitar recriações desnecessárias
+  const handleSaveUser = useCallback(async () => {
+    try {
+      const userData = {
+        name: "Usuário Teste",
+        email: "teste@example.com",
+        phone: "+5511999999999",
+        accessCount: 1,
+        settings: settings,
+      };
+      
+      await saveUserToFirebase(userData);
+      alert("Usuário salvo com sucesso!");
+    } catch (error) {
+      console.error("Erro ao salvar usuário:", error);
+      alert("Erro ao salvar usuário");
+    }
+  }, [saveUserToFirebase, settings]);
 
+  const handleSaveTestTransaction = useCallback(async () => {
+    try {
+      const transactionData = {
+        type: "PIX",
+        amount: 100.50,
+        recipient: "Test Recipient",
+        status: "completed",
+      };
+      
+      await saveTransactionToFirebase(transactionData);
+      alert("Transação teste salva com sucesso!");
+    } catch (error) {
+      console.error("Erro ao salvar transação:", error);
+      alert("Erro ao salvar transação");
+    }
+  }, [saveTransactionToFirebase]);
+
+  const handleUploadAnalytics = useCallback(async () => {
+    try {
+      await uploadAnalyticsToFirebase("testUser123");
+      alert("Analytics enviados com sucesso!");
+    } catch (error) {
+      console.error("Erro ao enviar analytics:", error);
+      alert("Erro ao enviar analytics");
+    }
+  }, [uploadAnalyticsToFirebase]);
+
+  // Estilos também devem ser memoizados se dependem de props/state que mudam frequentemente
   const dynamicStyles = StyleSheet.create({
     container: {
       flexGrow: 1,
@@ -116,17 +166,37 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
       <Button
         mode="contained"
-        onPress={async () => {
-            try {
-              await addDoc(collection(db, "usuarios"), {
-                nome: "Kaue",
-                idade: 30,
-              });
-              alert("Usuário salvo com sucesso!");
-            } catch (e) {
-              console.error("Erro ao adicionar documento: ", e);
-            }
-        }}
+        onPress={handleSaveUser}
+        style={dynamicStyles.button}
+        labelStyle={dynamicStyles.buttonText}
+        contentStyle={dynamicStyles.buttonContent}
+      >
+        <Icon
+          name="account-plus"
+          size={24 + (zoomEnabled ? 6 : 0)}
+          style={dynamicStyles.icon}
+        />
+        Salvar Usuário Teste
+      </Button>
+
+      <Button
+        mode="contained"
+        onPress={handleSaveTestTransaction}
+        style={dynamicStyles.button}
+        labelStyle={dynamicStyles.buttonText}
+        contentStyle={dynamicStyles.buttonContent}
+      >
+        <Icon
+          name="cash-multiple"
+          size={24 + (zoomEnabled ? 6 : 0)}
+          style={dynamicStyles.icon}
+        />
+        Salvar Transação Teste
+      </Button>
+
+      <Button
+        mode="contained"
+        onPress={handleUploadAnalytics}
         style={dynamicStyles.button}
         labelStyle={dynamicStyles.buttonText}
         contentStyle={dynamicStyles.buttonContent}
@@ -136,7 +206,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           size={24 + (zoomEnabled ? 6 : 0)}
           style={dynamicStyles.icon}
         />
-        Enviar dados ao Firebase
+        Enviar Analytics
       </Button>
 
       <Button
@@ -159,14 +229,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           Último acesso: {lastAccessed || "N/A"}
         </Text>
         <Text style={dynamicStyles.analyticsText}>
-          Tempo médio: {executionTime ? `${executionTime}s` : "N/A"}
+          Tempo médio: {executionTime ? `${executionTime.toFixed(2)}s` : "N/A"}
         </Text>
         <Text style={dynamicStyles.analyticsText}>
           Interações: {clickCount || 0}
         </Text>
       </View>
-
-      
     </ScrollView>
   );
 };
