@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAccessibility } from '../context/AccessibilityContext';
@@ -7,11 +7,12 @@ import { Button } from 'react-native-paper';
 import { SuccessScreenNavigationProp } from '../navigation/types';
 
 const SuccessScreen = () => {
-  const { settings } = useAccessibility();
+  const { settings, uploadAnalyticsToFirebase, endCurrentSession } = useAccessibility();
   const navigation = useNavigation<SuccessScreenNavigationProp>();
-  const scaleAnim = new Animated.Value(0.5);
-  const opacityAnim = new Animated.Value(0);
+  const scaleAnim = useRef(new Animated.Value(0.5)).current;
+  const opacityAnim = useRef(new Animated.Value(0)).current;
   const [showButton, setShowButton] = React.useState(false);
+  const buttonTimer = useRef<NodeJS.Timeout | null>(null);
 
   const colors = {
     background: settings.highContrast ? "#000" : "#F8F9FA",
@@ -35,14 +36,18 @@ const SuccessScreen = () => {
       }),
     ]).start();
 
-    const buttonTimer = setTimeout(() => setShowButton(true), 2000);
-    const redirectTimer = setTimeout(() => navigation.navigate("Home"), 5000);
+    buttonTimer.current = setTimeout(() => setShowButton(true), 2000);
 
     return () => {
-      clearTimeout(buttonTimer);
-      clearTimeout(redirectTimer);
+      if (buttonTimer.current) clearTimeout(buttonTimer.current);
     };
   }, []);
+
+  const handleGoHome = async () => {
+    endCurrentSession(); // Finaliza a sessão
+    await uploadAnalyticsToFirebase(); // Envia para o Firebase
+    navigation.navigate("Home"); // Vai para a Home
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -92,7 +97,7 @@ const SuccessScreen = () => {
         {showButton && (
           <Button
             mode="contained"
-            onPress={() => navigation.navigate("Home")}
+            onPress={handleGoHome}
             style={[styles.button, { backgroundColor: colors.button }]}
             labelStyle={[
               styles.buttonText,

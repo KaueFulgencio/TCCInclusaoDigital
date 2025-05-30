@@ -5,6 +5,8 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../navigation/types";
 import { useAccessibility } from "../context/AccessibilityContext";
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from "../../firebase"; 
 
 type HomeScreenProps = {
   navigation: StackNavigationProp<RootStackParamList, "Home">;
@@ -14,6 +16,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const { settings, analytics } = useAccessibility();
   const { fontSize, highContrast, zoomEnabled } = settings;
   const { executionTime, clickCount, lastAccessed } = analytics;
+
+  const { uploadAnalyticsToFirebase } = useAccessibility();
 
   const dynamicStyles = StyleSheet.create({
     container: {
@@ -103,11 +107,36 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         contentStyle={dynamicStyles.buttonContent}
       >
         <Icon
-          name="cash-fast" 
+          name="cash-fast"
           size={24 + (zoomEnabled ? 6 : 0)}
           style={dynamicStyles.icon}
         />
         Enviar PIX
+      </Button>
+
+      <Button
+        mode="contained"
+        onPress={async () => {
+            try {
+              await addDoc(collection(db, "usuarios"), {
+                nome: "Kaue",
+                idade: 30,
+              });
+              alert("Usuário salvo com sucesso!");
+            } catch (e) {
+              console.error("Erro ao adicionar documento: ", e);
+            }
+        }}
+        style={dynamicStyles.button}
+        labelStyle={dynamicStyles.buttonText}
+        contentStyle={dynamicStyles.buttonContent}
+      >
+        <Icon
+          name="cloud-upload"
+          size={24 + (zoomEnabled ? 6 : 0)}
+          style={dynamicStyles.icon}
+        />
+        Enviar dados ao Firebase
       </Button>
 
       <Button
@@ -136,6 +165,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           Interações: {clickCount || 0}
         </Text>
       </View>
+
+      
     </ScrollView>
   );
 };

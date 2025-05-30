@@ -1,6 +1,8 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system";
+import { db } from "../../firebase";
+import { collection, addDoc } from 'firebase/firestore';
 
 type AccessibilitySettings = {
   fontSize: number;
@@ -43,7 +45,9 @@ type AccessibilityContextType = {
   settings: AccessibilitySettings;
   colors: AccessibilityColors;
   analytics: AnalyticsData;
-  updateSettings: (newSettings: Partial<AccessibilitySettings>) => Promise<void>;
+  updateSettings: (
+    newSettings: Partial<AccessibilitySettings>
+  ) => Promise<void>;
   incrementClickCount: () => void;
   updateExecutionTime: (time: number) => void;
   exportAnalytics: () => Promise<ExportAnalyticsResult>;
@@ -53,6 +57,7 @@ type AccessibilityContextType = {
   recordScreenTransition: (screenName: string) => void;
   endCurrentSession: () => void;
   exportCompleteSessionData: () => Promise<any>;
+  uploadAnalyticsToFirebase: () => Promise<void>;
 };
 
 const defaultSettings: AccessibilitySettings = {
@@ -69,8 +74,8 @@ const defaultAnalytics: AnalyticsData = {
   currentSession: {
     startTime: Date.now(),
     endTime: null,
-    screenFlow: ['AppStart']
-  }
+    screenFlow: ["AppStart"],
+  },
 };
 
 const defaultColors: AccessibilityColors = {
@@ -99,14 +104,35 @@ const AccessibilityContext = createContext<AccessibilityContextType>({
   recordScreenTransition: () => {},
   endCurrentSession: () => {},
   exportCompleteSessionData: async () => null,
+  uploadAnalyticsToFirebase: async () => {},
 });
 
 export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [settings, setSettings] = useState<AccessibilitySettings>(defaultSettings);
+  const [settings, setSettings] =
+    useState<AccessibilitySettings>(defaultSettings);
   const [analytics, setAnalytics] = useState<AnalyticsData>(defaultAnalytics);
   const [isLoaded, setIsLoaded] = useState(false);
+
+  const uploadAnalyticsToFirebase = async () => {
+    try {
+      const dataToSend = {
+        ...analytics,
+        timestamp: new Date().toISOString(),
+        sessionDuration: analytics.currentSession.endTime
+          ? (analytics.currentSession.endTime -
+              analytics.currentSession.startTime) /
+            1000
+          : null,
+      };
+
+      await addDoc(collection(db, "analytics"), dataToSend);
+      console.log("Analytics enviados para o Firebase com sucesso!");
+    } catch (error) {
+      console.error("Erro ao enviar analytics para o Firebase:", error);
+    }
+  };
 
   // Carrega dados ao iniciar
   useEffect(() => {
@@ -126,8 +152,8 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
             currentSession: {
               startTime: Date.now(),
               endTime: null,
-              screenFlow: ['AppStart']
-            }
+              screenFlow: ["AppStart"],
+            },
           });
         }
       } catch (error) {
@@ -157,7 +183,9 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
     saveData();
   }, [settings, analytics, isLoaded]);
 
-  const updateSettings = async (newSettings: Partial<AccessibilitySettings>) => {
+  const updateSettings = async (
+    newSettings: Partial<AccessibilitySettings>
+  ) => {
     setSettings((prev) => ({ ...prev, ...newSettings }));
   };
 
@@ -177,37 +205,37 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const startNewSession = () => {
-    setAnalytics(prev => ({
+    setAnalytics((prev) => ({
       ...prev,
       currentSession: {
         startTime: Date.now(),
         endTime: null,
-        screenFlow: ['AppStart']
-      }
+        screenFlow: ["AppStart"],
+      },
     }));
   };
 
   const recordScreenTransition = (screenName: string) => {
-    setAnalytics(prev => ({
+    setAnalytics((prev) => ({
       ...prev,
       currentSession: {
         ...prev.currentSession,
-        screenFlow: [...prev.currentSession.screenFlow, screenName]
-      }
+        screenFlow: [...prev.currentSession.screenFlow, screenName],
+      },
     }));
   };
 
   const endCurrentSession = () => {
     const endTime = Date.now();
-    setAnalytics(prev => {
+    setAnalytics((prev) => {
       const sessionDuration = (endTime - prev.currentSession.startTime) / 1000;
       return {
         ...prev,
         executionTime: prev.executionTime + sessionDuration,
         currentSession: {
           ...prev.currentSession,
-          endTime
-        }
+          endTime,
+        },
       };
     });
   };
@@ -217,7 +245,9 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
       const analyticsData = await AsyncStorage.getItem("@analytics_data");
       if (analyticsData) {
         const parsedData = JSON.parse(analyticsData) as AnalyticsData;
-        const fileName = `analytics_${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
+        const fileName = `analytics_${new Date()
+          .toISOString()
+          .replace(/[:.]/g, "-")}.json`;
         const fileUri = `${FileSystem.documentDirectory}${fileName}`;
         await FileSystem.writeAsStringAsync(fileUri, analyticsData);
         return { filePath: fileUri, data: parsedData };
@@ -236,10 +266,12 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
         const parsed = JSON.parse(analyticsData);
         return {
           ...parsed,
-          sessionDuration: parsed.currentSession.endTime 
-            ? (parsed.currentSession.endTime - parsed.currentSession.startTime) / 1000 
+          sessionDuration: parsed.currentSession.endTime
+            ? (parsed.currentSession.endTime -
+                parsed.currentSession.startTime) /
+              1000
             : null,
-          screenFlow: parsed.currentSession.screenFlow.join(' > ')
+          screenFlow: parsed.currentSession.screenFlow.join(" > "),
         };
       }
       return null;
@@ -254,7 +286,9 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
       const directory = FileSystem.documentDirectory;
       if (!directory) return [];
       const files = await FileSystem.readDirectoryAsync(directory);
-      return files.filter(file => file.startsWith("analytics_") && file.endsWith(".json"));
+      return files.filter(
+        (file) => file.startsWith("analytics_") && file.endsWith(".json")
+      );
     } catch (error) {
       console.error("Error listing analytics files:", error);
       return [];
@@ -277,10 +311,10 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
         border: "#FFFFFF",
         placeholder: "#AAAAAA",
         error: "#FF6B6B",
-        primary: "#FFD700", 
-        background: "#121212", 
-        radioText: "#FFFFFF", 
-        radioButton: "#FFD700", 
+        primary: "#FFD700",
+        background: "#121212",
+        radioText: "#FFFFFF",
+        radioButton: "#FFD700",
       }
     : defaultColors;
 
@@ -300,6 +334,7 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
         recordScreenTransition,
         endCurrentSession,
         exportCompleteSessionData,
+        uploadAnalyticsToFirebase,
       }}
     >
       {children}
