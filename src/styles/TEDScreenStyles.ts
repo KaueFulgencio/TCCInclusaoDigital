@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet } from "react-native";
 
 const styles = StyleSheet.create({
   container: {
@@ -7,16 +7,16 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 24,
-    alignItems: 'center',
+    alignItems: "center",
   },
   title: {
-    fontWeight: '600',
+    fontWeight: "600",
   },
   card: {
     borderRadius: 12,
     padding: 20,
     marginBottom: 20,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -26,7 +26,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   sectionTitle: {
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 16,
   },
   inputContainer: {
@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
   },
   label: {
     marginBottom: 8,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   input: {
     borderWidth: 1,
@@ -45,8 +45,8 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
   valueContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   valueInput: {
@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   buttonLabel: {
-    fontWeight: '600',
+    fontWeight: "600",
     letterSpacing: 0.5,
   },
   helpHeaderButton: {
@@ -76,8 +76,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   radioOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 8,
   },
   radioText: {
@@ -86,16 +86,26 @@ const styles = StyleSheet.create({
   pickerContainer: {
     borderRadius: 8,
     borderWidth: 1,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   picker: {
-    width: '100%',
+    width: "100%",
     height: 50,
   },
   dateButton: {
     borderWidth: 1,
     borderRadius: 8,
     paddingVertical: 10,
+  },
+  headerButtonsContainer: {
+    flexDirection: "row",
+    marginRight: 10,
+  },
+  settingsHeaderButton: {
+    marginRight: 5,
+  },
+  headerButtonText: {
+    fontSize: 16,
   },
 });
 

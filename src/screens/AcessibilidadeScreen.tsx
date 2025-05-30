@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, Switch, ActivityIndicator } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { Button } from 'react-native-paper';
@@ -10,6 +10,7 @@ const AcessibilidadeScreen = () => {
   const navigation = useNavigation();
   const {
     settings,
+    colors,
     updateSettings,
     incrementClickCount,
     updateExecutionTime,
@@ -20,14 +21,16 @@ const AcessibilidadeScreen = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
+  // Atualiza o tempo de execução ao desmontar (sem dependências problemáticas)
   useEffect(() => {
     return () => {
       const endTime = Date.now();
       updateExecutionTime((endTime - startTime) / 1000);
     };
-  }, [startTime, updateExecutionTime]);
+  }, [updateExecutionTime, startTime]);
 
-  const handleSave = () => {
+  // Função de salvamento otimizada
+  const handleSave = useCallback(() => {
     incrementClickCount();
     setIsSaving(true);
 
@@ -39,89 +42,190 @@ const AcessibilidadeScreen = () => {
       setTimeout(() => {
         navigation.goBack();
       }, 1500);
-    }, 1000); // Simula tempo de salvamento
-  };
+    }, 1000);
+  }, [localSettings, updateSettings, incrementClickCount, navigation]);
+
+  // Atualizações de estado para cada configuração (evitando renderizações excessivas)
+  const handleFontSizeChange = useCallback((value: number) => {
+    setLocalSettings(prev => ({ ...prev, fontSize: value }));
+  }, []);
+
+  const handleHighContrastToggle = useCallback((value: boolean) => {
+    setLocalSettings(prev => ({ ...prev, highContrast: value }));
+    incrementClickCount();
+  }, [incrementClickCount]);
+
+  const handleZoomToggle = useCallback((value: boolean) => {
+    setLocalSettings(prev => ({ ...prev, zoomEnabled: value }));
+    incrementClickCount();
+  }, [incrementClickCount]);
 
   return (
-    <ScrollView contentContainerStyle={[
-      styles.container,
-      localSettings.highContrast && styles.highContrastContainer
-    ]}>
-      <Text style={[styles.title, { fontSize: localSettings.fontSize + 4, color: localSettings.highContrast ? '#fff' : '#333' }]}>
+    <ScrollView 
+      contentContainerStyle={[
+        styles.container, 
+        { backgroundColor: colors.cardBackground }
+      ]}
+    >
+      <Text style={[
+        styles.title, 
+        { 
+          fontSize: localSettings.fontSize + 4, 
+          color: colors.text 
+        }
+      ]}>
         Configurações de Acessibilidade
       </Text>
 
-      <View style={styles.settingItem}>
+      {/* Controle de Tamanho da Fonte */}
+      <View style={[
+        styles.settingItem, 
+        { 
+          backgroundColor: colors.cardBackground, 
+          borderColor: colors.border 
+        }
+      ]}>
         <View style={styles.settingTextContainer}>
-          <Icon name="format-size" size={24} color="#6200ee" />
-          <Text style={[styles.settingText, { fontSize: localSettings.fontSize, color: localSettings.highContrast ? '#fff' : '#333' }]}>
+          <Icon name="format-size" size={24} color={colors.text} />
+          <Text style={[
+            styles.settingText, 
+            { 
+              fontSize: localSettings.fontSize, 
+              color: colors.text 
+            }
+          ]}>
             Tamanho da Fonte
           </Text>
         </View>
         <Slider
           value={localSettings.fontSize}
-          onValueChange={(value) => setLocalSettings(prev => ({ ...prev, fontSize: value }))}
+          onValueChange={handleFontSizeChange}
           minimumValue={14}
           maximumValue={24}
           step={2}
           style={styles.slider}
-          minimumTrackTintColor="#6200ee"
-          maximumTrackTintColor="#d3d3d3"
-          thumbTintColor="#6200ee"
+          minimumTrackTintColor={colors.text}
+          maximumTrackTintColor={colors.placeholder}
+          thumbTintColor={colors.text}
         />
         <View style={styles.sliderLabels}>
-          <Text style={[styles.sliderLabel, { fontSize: localSettings.fontSize }]}>14px</Text>
-          <Text style={[styles.sliderValue, { fontSize: localSettings.fontSize }]}>{localSettings.fontSize}px</Text>
-          <Text style={[styles.sliderLabel, { fontSize: localSettings.fontSize }]}>24px</Text>
+          <Text style={[
+            styles.sliderLabel, 
+            { 
+              fontSize: localSettings.fontSize, 
+              color: colors.text 
+            }
+          ]}>
+            14px
+          </Text>
+          <Text style={[
+            styles.sliderValue, 
+            { 
+              fontSize: localSettings.fontSize, 
+              color: colors.text 
+            }
+          ]}>
+            {localSettings.fontSize}px
+          </Text>
+          <Text style={[
+            styles.sliderLabel, 
+            { 
+              fontSize: localSettings.fontSize, 
+              color: colors.text 
+            }
+          ]}>
+            24px
+          </Text>
         </View>
       </View>
 
-      <View style={styles.settingItem}>
+      {/* Controle de Alto Contraste */}
+      <View style={[
+        styles.settingItem, 
+        { 
+          backgroundColor: colors.cardBackground, 
+          borderColor: colors.border 
+        }
+      ]}>
         <View style={styles.settingTextContainer}>
-          <Icon name="contrast" size={24} color="#6200ee" />
-          <Text style={[styles.settingText, { fontSize: localSettings.fontSize, color: localSettings.highContrast ? '#fff' : '#333' }]}>
+          <Icon name="contrast" size={24} color={colors.text} />
+          <Text style={[
+            styles.settingText, 
+            { 
+              fontSize: localSettings.fontSize, 
+              color: colors.text 
+            }
+          ]}>
             Alto Contraste
           </Text>
         </View>
         <Switch
           value={localSettings.highContrast}
-          onValueChange={(value) => {
-            setLocalSettings(prev => ({ ...prev, highContrast: value }));
-            incrementClickCount();
+          onValueChange={handleHighContrastToggle}
+          thumbColor={colors.text}
+          trackColor={{ 
+            false: colors.placeholder, 
+            true: colors.text 
           }}
-          thumbColor="#6200ee"
-          trackColor={{ false: '#767577', true: '#81b0ff' }}
         />
       </View>
 
-      <View style={styles.settingItem}>
+      {/* Controle de Zoom */}
+      <View style={[
+        styles.settingItem, 
+        { 
+          backgroundColor: colors.cardBackground, 
+          borderColor: colors.border 
+        }
+      ]}>
         <View style={styles.settingTextContainer}>
-          <Icon name="magnify" size={24} color="#6200ee" />
-          <Text style={[styles.settingText, { fontSize: localSettings.fontSize, color: localSettings.highContrast ? '#fff' : '#333' }]}>
+          <Icon name="magnify" size={24} color={colors.text} />
+          <Text style={[
+            styles.settingText, 
+            { 
+              fontSize: localSettings.fontSize, 
+              color: colors.text 
+            }
+          ]}>
             Zoom Habilitado
           </Text>
         </View>
         <Switch
           value={localSettings.zoomEnabled}
-          onValueChange={(value) => {
-            setLocalSettings(prev => ({ ...prev, zoomEnabled: value }));
-            incrementClickCount();
+          onValueChange={handleZoomToggle}
+          thumbColor={colors.text}
+          trackColor={{ 
+            false: colors.placeholder, 
+            true: colors.text 
           }}
-          thumbColor="#6200ee"
-          trackColor={{ false: '#767577', true: '#81b0ff' }}
         />
       </View>
 
-      <View style={styles.saveButton}>
+      {/* Botão de Salvar */}
+      <View style={[
+        styles.saveButton, 
+        { backgroundColor: colors.text }
+      ]}>
         {isSaving ? (
-          <ActivityIndicator size="small" color="#fff" />
+          <ActivityIndicator 
+            size="small" 
+            color={colors.cardBackground} 
+          />
         ) : saveSuccess ? (
-          <Icon name="check-circle" size={24} color="#fff" />
+          <Icon 
+            name="check-circle" 
+            size={24} 
+            color={colors.cardBackground} 
+          />
         ) : (
           <Button
             mode="contained"
             onPress={handleSave}
-            labelStyle={styles.buttonText}
+            labelStyle={[
+              styles.buttonText, 
+              { color: colors.cardBackground }
+            ]}
+            color={colors.text}
           >
             Salvar Configurações
           </Button>
@@ -131,14 +235,11 @@ const AcessibilidadeScreen = () => {
   );
 };
 
+// Estilos (sem cores fixas)
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     padding: 20,
-    backgroundColor: '#f5f5f5',
-  },
-  highContrastContainer: {
-    backgroundColor: '#000',
   },
   title: {
     fontWeight: 'bold',
@@ -147,9 +248,9 @@ const styles = StyleSheet.create({
   },
   settingItem: {
     marginBottom: 25,
-    backgroundColor: 'white',
     padding: 15,
     borderRadius: 10,
+    borderWidth: 1,
     elevation: 2,
   },
   settingTextContainer: {
@@ -169,23 +270,18 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 5,
   },
-  sliderLabel: {
-    color: '#757575',
-  },
+  sliderLabel: {},
   sliderValue: {
     fontWeight: 'bold',
-    color: '#6200ee',
   },
   saveButton: {
     marginTop: 20,
     paddingVertical: 10,
     borderRadius: 10,
-    backgroundColor: '#6200ee',
     alignItems: 'center',
   },
   buttonText: {
     fontSize: 16,
-    color: '#fff',
   },
 });
 

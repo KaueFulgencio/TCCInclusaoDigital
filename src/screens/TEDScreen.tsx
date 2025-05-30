@@ -2,34 +2,32 @@ import React, { useState, useLayoutEffect, useRef, useEffect } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   TextInput,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { Button, RadioButton, HelperText } from "react-native-paper";
+import { Button, HelperText } from "react-native-paper";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { TEDScreenNavigationProp } from "../navigation/types";
 import { useAccessibility } from "../context/AccessibilityContext";
 import { initDB, saveLog } from "../services/dbService";
-import { bancos } from "../data/ListaBancos";
-import { apenasNumeros, cpfOuCnpjRegex } from "../services/regex";
-import { Picker } from "@react-native-picker/picker";
 import TransferTypeSelector from "../components/TransferTypeSelector";
 import BankSelector from "../components/BankSelector";
 import TransferOptionsWithDate from "../components/TransferOptionsWithDate";
 import styles from "../styles/TEDScreenStyles";
 import AccountTypePicker from "../components/AccountTypePicker";
+import WarningBox from "../components/WarningBox";
+import FinalidadePicker from "../components/FinalidadePicker";
 
 type TEDScreenProps = {
   navigation: TEDScreenNavigationProp;
 };
 
-type TransferType = "same" | "third";
+type TransferType = "same" | "third" | "other";
 
 const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
-  const { settings } = useAccessibility();
+  const { settings, colors } = useAccessibility();
   const [transferType, setTransferType] = useState<TransferType>("same");
   const [account, setAccount] = useState("");
   const [bank, setBank] = useState("");
@@ -41,32 +39,19 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
     tipoConta: false,
     cpfOuCNPJ: false,
     finalidade: false,
+    identificacaoDeposito: false,
+    historico: false,
   });
   const [tipoConta, setTipoConta] = useState("");
   const [query, setQuery] = useState("");
-  const [nome, setNome] = useState("");
-  const [cpfOuCNPJ, setCpfOuCNPJ] = useState("");
+  const [nome, setNome] = useState("Kaue Medeiros Fulgencio");
+  const [cpfOuCNPJ, setCpfOuCNPJ] = useState("494.827.158-61");
   const [finalidade, setFinalidade] = useState("");
-  const [erroCpfCnpj, setErroCpfCnpj] = useState("");
+  const [identificacaoDeposito, setIdentificacaoDeposito] = useState("");
+  const [historico, setHistorico] = useState("");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const startTimeRef = useRef(Date.now());
   const [clickCount, setClickCount] = useState(0);
-
-  const getThemeColors = () => {
-    return {
-      background: settings.highContrast ? "#000000" : "#F8F9FA",
-      cardBackground: settings.highContrast ? "#121212" : "#FFFFFF",
-      text: settings.highContrast ? "#FFFFFF" : "#2F2F2F",
-      primary: settings.highContrast ? "#FFD700" : "#0066CC",
-      error: settings.highContrast ? "#FF0000" : "#D32F2F",
-      border: settings.highContrast ? "#FFFFFF" : "#E0E0E0",
-      placeholder: settings.highContrast ? "#AAAAAA" : "#9E9E9E",
-      radioText: settings.highContrast ? "#FFFFFF" : "#333333",
-      radioButton: settings.highContrast ? "#FFD700" : "#0066CC",
-    };
-  };
-
-  const colors = getThemeColors();
 
   useEffect(() => {
     (async () => {
@@ -78,13 +63,22 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <Button
-          onPress={() => navigation.navigate("Acessibilidade")}
-          style={styles.helpHeaderButton}
-          labelStyle={[styles.helpHeaderButtonText, { color: colors.primary }]}
-        >
-          <Icon name="help-circle" size={24} color={colors.primary} />
-        </Button>
+        <View style={styles.headerButtonsContainer}>
+          <Button
+            onPress={() => navigation.navigate("AcessibilidadeHelp")}
+            style={styles.helpHeaderButton}
+            labelStyle={[styles.headerButtonText, { color: colors.primary }]}
+          >
+            <Icon name="help-circle" size={24} color={colors.primary} />
+          </Button>
+          <Button
+            onPress={() => navigation.navigate("Acessibilidade")}
+            style={styles.settingsHeaderButton}
+            labelStyle={[styles.headerButtonText, { color: colors.primary }]}
+          >
+            <Icon name="cog" size={24} color={colors.primary} />
+          </Button>
+        </View>
       ),
     });
   }, [navigation, colors.primary]);
@@ -93,13 +87,31 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
     const numericValue = parseFloat(parseCurrency(value));
 
     const newErrors = {
-      account: account.trim() === "",
-      bank: bank.trim() === "",
+      account: false,
+      bank: false,
       value: isNaN(numericValue) || numericValue <= 0,
-      tipoConta: tipoConta.trim() === "",
-      cpfOuCNPJ: cpfOuCNPJ.trim() === "",
-      finalidade: finalidade.trim() === "",
+      tipoConta: false,
+      cpfOuCNPJ: false,
+      finalidade: false,
+      identificacaoDeposito: false,
+      historico: false,
     };
+
+    if (transferType === "other") {
+      newErrors.bank = bank.trim() === "";
+      newErrors.identificacaoDeposito = identificacaoDeposito.trim() === "";
+    } else if (transferType === "same") {
+      newErrors.bank = bank.trim() === "";
+      newErrors.account = account.trim() === "";
+      newErrors.tipoConta = tipoConta.trim() === "";
+      newErrors.historico = historico.trim() === "";
+    } else {
+      newErrors.bank = bank.trim() === "";
+      newErrors.account = account.trim() === "";
+      newErrors.tipoConta = tipoConta.trim() === "";
+      newErrors.cpfOuCNPJ = cpfOuCNPJ.trim() === "";
+      newErrors.finalidade = finalidade.trim() === "";
+    }
 
     setErrors(newErrors);
     return !Object.values(newErrors).some(Boolean);
@@ -116,14 +128,17 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
         bank,
         account,
         value: numericValue.toString(),
-        nome,
-        cpfOuCNPJ,
-        finalidade,
+        nome: transferType === "same" ? "Kaue Medeiros Fulgencio" : nome,
+        cpfOuCNPJ:
+          transferType === "same"
+            ? "49482715861"
+            : cpfOuCNPJ.replace(/\D/g, ""),
+        finalidade: transferType === "other" ? "Depósito Judicial" : finalidade,
         tipoConta,
         date: selectedDate.toISOString(),
+        identificacaoDeposito,
+        historico,
       };
-
-      console.log("Dados sendo enviados:", transferData);
 
       navigation.navigate("Confirmation", { transferData });
 
@@ -133,34 +148,9 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
     }
   };
 
-  const handleCpfOuCnpjChange = (text: string) => {
-    const valor = text.replace(apenasNumeros, "");
-    setCpfOuCNPJ(valor);
-
-    if (cpfOuCnpjRegex.test(valor)) {
-      setErroCpfCnpj("");
-    } else {
-      setErroCpfCnpj("Informe um CPF (11 dígitos) ou CNPJ (14 dígitos) válido");
-    }
-  };
-
-  const formatCurrency = (value: string) => {
-    const number = parseFloat(value);
-    if (isNaN(number)) return "R$ 0,00";
-
-    return number.toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    });
-  };
-
   const formatCurrencyInput = (value: string) => {
-    // Remove todos os caracteres não numéricos
     const onlyNumbers = value.replace(/\D/g, "");
-
-    // Converte para número e formata como moeda brasileira
     const number = Number(onlyNumbers) / 100;
-
     return number.toLocaleString("pt-BR", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
@@ -168,15 +158,39 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
   };
 
   const parseCurrency = (formattedValue: string) => {
-    // Remove pontos e substitui vírgula por ponto para obter o valor numérico
     return formattedValue.replace(/\./g, "").replace(",", ".");
+  };
+
+  const formatAccountInput = (input: string) => {
+    // Remove tudo que não é número
+    const cleaned = input.replace(/\D/g, "");
+
+    // Aplica a máscara: 0000-000000-0
+    let formatted = cleaned;
+
+    // Insere o primeiro hífen após 4 dígitos
+    if (cleaned.length > 4) {
+      formatted = `${cleaned.slice(0, 4)}-${cleaned.slice(4)}`;
+    }
+
+    // Insere o segundo hífen após 10 dígitos (4 agência + 6 conta)
+    if (cleaned.length > 10) {
+      formatted = `${formatted.slice(0, 11)}-${formatted.slice(11)}`;
+    }
+
+    // Limita o tamanho máximo (4 agência + 6 conta + 1 DV = 11 dígitos)
+    if (cleaned.length > 11) {
+      formatted = formatted.slice(0, 13); // 4 + 1 + 6 + 1 + 1 = 13 caracteres (com hífens)
+    }
+
+    return formatted;
   };
 
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={{ flex: 1, backgroundColor: colors.background }}
-      keyboardVerticalOffset={90}
+      keyboardVerticalOffset={100}
     >
       <ScrollView
         contentContainerStyle={[
@@ -203,122 +217,54 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
           value={transferType}
           onChange={setTransferType}
           colors={{
-            cardBackground: "#fff",
-            text: "#000",
-            radioButton: "#007bff",
-            placeholder: "#ccc",
-            radioText: "#333",
+            cardBackground: colors.cardBackground,
+            text: colors.text,
+            radioButton: colors.primary,
+            placeholder: colors.placeholder,
+            radioText: colors.text,
           }}
         />
 
-        <View style={[styles.card, { backgroundColor: colors.cardBackground }]}>
-          <Text
-            style={[
-              styles.sectionTitle,
-              {
-                fontSize: settings.fontSize + 2,
-                color: colors.text,
-              },
-            ]}
-          >
-            Dados da Conta
-          </Text>
-
-          <BankSelector
-            value={bank}
-            query={query}
-            onQueryChange={setQuery}
-            onSelectBank={(codigo: string, nomeCompleto: string) => {
-              setBank(codigo);
-              setQuery(nomeCompleto);
-            }}
-            error={false}
-          />
-
-          <AccountTypePicker
-            value={tipoConta}
-            onChange={setTipoConta}
-            colors={{
-              cardBackground: colors.cardBackground,
-              text: colors.text,
-              border: colors.border,
-              placeholder: colors.placeholder,
-            }}
-            error={errors.tipoConta}
-          />
-
-          <View style={styles.inputContainer}>
-            <Text
-              style={[
-                styles.label,
-                { fontSize: settings.fontSize, color: colors.text },
-              ]}
+        {transferType === "other" ? (
+          <>
+            <View
+              style={[styles.card, { backgroundColor: colors.cardBackground }]}
             >
-              Nome completo
-            </Text>
-            <TextInput
-              style={[
-                styles.input,
-                errors.account && styles.inputError,
-                {
-                  fontSize: settings.fontSize,
-                  backgroundColor: colors.cardBackground,
-                  borderColor: colors.border,
-                  color: colors.text,
-                },
-              ]}
-              placeholder="Digite seu nome completo"
-              placeholderTextColor={colors.placeholder}
-              value={nome}
-              onChangeText={setNome}
-              keyboardType="default"
-            />
-            <HelperText
-              type="error"
-              visible={errors.account}
-              style={{ color: colors.error }}
-            >
-              Nome é obrigatório
-            </HelperText>
-          </View>
+              <Text
+                style={[
+                  styles.sectionTitle,
+                  {
+                    fontSize: settings.fontSize + 2,
+                    color: colors.text,
+                  },
+                ]}
+              >
+                Dados do Depósito Judicial
+              </Text>
 
-          <View style={styles.inputContainer}>
-            <Text
-              style={[
-                styles.label,
-                { fontSize: settings.fontSize, color: colors.text },
-              ]}
-            >
-              Agência - Conta - DV
-            </Text>
-            <TextInput
-              style={[
-                styles.input,
-                errors.account && styles.inputError,
-                {
-                  fontSize: settings.fontSize,
-                  backgroundColor: colors.cardBackground,
-                  borderColor: colors.border,
-                  color: colors.text,
-                },
-              ]}
-              placeholder="0000-000000-0"
-              placeholderTextColor={colors.placeholder}
-              value={account}
-              onChangeText={setAccount}
-              keyboardType="numeric"
-            />
-            <HelperText
-              type="error"
-              visible={errors.account}
-              style={{ color: colors.error }}
-            >
-              Conta é obrigatória
-            </HelperText>
-          </View>
+              <Text
+                style={[
+                  styles.label,
+                  {
+                    fontSize: settings.fontSize + 2,
+                    color: colors.text,
+                  },
+                ]}
+              >
+                Banco*
+              </Text>
 
-          {transferType === "third" && (
-            <>
+              <BankSelector
+                value={bank}
+                query={query}
+                onQueryChange={setQuery}
+                onSelectBank={(codigo: string, nomeCompleto: string) => {
+                  setBank(codigo);
+                  setQuery(nomeCompleto);
+                }}
+                error={errors.bank}
+              />
+
               <View style={styles.inputContainer}>
                 <Text
                   style={[
@@ -326,7 +272,106 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
                     { fontSize: settings.fontSize, color: colors.text },
                   ]}
                 >
-                  Nome do destinatário
+                  Identificação do Depósito*
+                </Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    errors.identificacaoDeposito && styles.inputError,
+                    {
+                      fontSize: settings.fontSize,
+                      backgroundColor: colors.cardBackground,
+                      borderColor: colors.border,
+                      color: colors.text,
+                    },
+                  ]}
+                  placeholder="Número do processo ou identificação"
+                  placeholderTextColor={colors.placeholder}
+                  value={identificacaoDeposito}
+                  onChangeText={setIdentificacaoDeposito}
+                />
+                <HelperText
+                  type="error"
+                  visible={errors.identificacaoDeposito}
+                  style={{ color: colors.error }}
+                >
+                  Identificação é obrigatória
+                </HelperText>
+              </View>
+            </View>
+          </>
+        ) : transferType === "same" ? (
+          <>
+            <View
+              style={[styles.card, { backgroundColor: colors.cardBackground }]}
+            >
+              <Text
+                style={[
+                  styles.sectionTitle,
+                  {
+                    fontSize: settings.fontSize + 2,
+                    color: colors.text,
+                  },
+                ]}
+              >
+                Dados da Conta
+              </Text>
+
+              <Text
+                style={[
+                  styles.label,
+                  {
+                    fontSize: settings.fontSize + 2,
+                    color: colors.text,
+                  },
+                ]}
+              >
+                Banco*
+              </Text>
+
+              <BankSelector
+                value={bank}
+                query={query}
+                onQueryChange={setQuery}
+                onSelectBank={(codigo: string, nomeCompleto: string) => {
+                  setBank(codigo);
+                  setQuery(nomeCompleto);
+                }}
+                error={errors.bank}
+              />
+
+              <Text
+                style={[
+                  styles.label,
+                  {
+                    fontSize: settings.fontSize + 2,
+                    color: colors.text,
+                  },
+                ]}
+              >
+                Tipo de conta a ser creditada*
+              </Text>
+
+              <AccountTypePicker
+                value={tipoConta}
+                onChange={setTipoConta}
+                colors={{
+                  cardBackground: colors.cardBackground,
+                  text: colors.text,
+                  border: colors.border,
+                  placeholder: colors.placeholder,
+                }}
+                error={errors.tipoConta}
+              />
+
+              <View style={styles.inputContainer}>
+                <Text
+                  style={[
+                    styles.label,
+                    { fontSize: settings.fontSize, color: colors.text },
+                  ]}
+                >
+                  Nome completo*
                 </Text>
                 <TextInput
                   style={[
@@ -338,10 +383,11 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
                       color: colors.text,
                     },
                   ]}
-                  placeholder="Digite o nome do destinatário"
-                  placeholderTextColor={colors.placeholder}
+                  value="Kaue Medeiros Fulgencio"
+                  editable={false}
                 />
               </View>
+
               <View style={styles.inputContainer}>
                 <Text
                   style={[
@@ -349,7 +395,7 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
                     { fontSize: settings.fontSize, color: colors.text },
                   ]}
                 >
-                  CPF do destinatário
+                  CPF*
                 </Text>
                 <TextInput
                   style={[
@@ -361,14 +407,306 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
                       color: colors.text,
                     },
                   ]}
-                  placeholder="000.000.000-00"
+                  value="494.827.158-61"
+                  editable={false}
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text
+                  style={[
+                    styles.label,
+                    { fontSize: settings.fontSize, color: colors.text },
+                  ]}
+                >
+                  Agência - Conta - DV*
+                </Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    errors.account && styles.inputError,
+                    {
+                      fontSize: settings.fontSize,
+                      backgroundColor: colors.cardBackground,
+                      borderColor: colors.border,
+                      color: colors.text,
+                    },
+                  ]}
+                  placeholder="0000-000000-0"
                   placeholderTextColor={colors.placeholder}
+                  value={account}
+                  onChangeText={(text) => {
+                    const formatted = formatAccountInput(text);
+                    setAccount(formatted);
+                  }}
+                  keyboardType="numeric"
+                  maxLength={13}
+                />
+                <HelperText
+                  type="error"
+                  visible={errors.account}
+                  style={{ color: colors.error }}
+                >
+                  Conta é obrigatória
+                </HelperText>
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text
+                  style={[
+                    styles.label,
+                    { fontSize: settings.fontSize, color: colors.text },
+                  ]}
+                >
+                  Identificação da Transferência*
+                </Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    {
+                      fontSize: settings.fontSize,
+                      backgroundColor: colors.cardBackground,
+                      borderColor: colors.border,
+                      color: colors.text,
+                    },
+                  ]}
+                  placeholder="Identifique esta transferência"
+                  placeholderTextColor={colors.placeholder}
+                  value={identificacaoDeposito}
+                  onChangeText={setIdentificacaoDeposito}
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text
+                  style={[
+                    styles.label,
+                    { fontSize: settings.fontSize, color: colors.text },
+                  ]}
+                >
+                  Histórico*
+                </Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    errors.historico && styles.inputError,
+                    {
+                      fontSize: settings.fontSize,
+                      backgroundColor: colors.cardBackground,
+                      borderColor: colors.border,
+                      color: colors.text,
+                    },
+                  ]}
+                  placeholder="Descreva o histórico"
+                  placeholderTextColor={colors.placeholder}
+                  value={historico}
+                  onChangeText={setHistorico}
+                  multiline
+                />
+                <HelperText
+                  type="error"
+                  visible={errors.historico}
+                  style={{ color: colors.error }}
+                >
+                  Histórico é obrigatório
+                </HelperText>
+              </View>
+            </View>
+          </>
+        ) : (
+          <>
+            <View
+              style={[styles.card, { backgroundColor: colors.cardBackground }]}
+            >
+              <Text
+                style={[
+                  styles.sectionTitle,
+                  {
+                    fontSize: settings.fontSize + 2,
+                    color: colors.text,
+                  },
+                ]}
+              >
+                Dados da Conta
+              </Text>
+
+              <Text
+                style={[
+                  styles.label,
+                  {
+                    fontSize: settings.fontSize + 2,
+                    color: colors.text,
+                  },
+                ]}
+              >
+                Banco*
+              </Text>
+
+              <BankSelector
+                value={bank}
+                query={query}
+                onQueryChange={setQuery}
+                onSelectBank={(codigo: string, nomeCompleto: string) => {
+                  setBank(codigo);
+                  setQuery(nomeCompleto);
+                }}
+                error={errors.bank}
+              />
+
+              <Text
+                style={[
+                  styles.label,
+                  {
+                    fontSize: settings.fontSize + 2,
+                    color: colors.text,
+                  },
+                ]}
+              >
+                Tipo de conta a ser creditada*
+              </Text>
+
+              <AccountTypePicker
+                value={tipoConta}
+                onChange={setTipoConta}
+                colors={{
+                  cardBackground: colors.cardBackground,
+                  text: colors.text,
+                  border: colors.border,
+                  placeholder: colors.placeholder,
+                }}
+                error={errors.tipoConta}
+              />
+
+              <View style={styles.inputContainer}>
+                <Text
+                  style={[
+                    styles.label,
+                    { fontSize: settings.fontSize, color: colors.text },
+                  ]}
+                >
+                  Nome completo*
+                </Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    errors.account && styles.inputError,
+                    {
+                      fontSize: settings.fontSize,
+                      backgroundColor: colors.cardBackground,
+                      borderColor: colors.border,
+                      color: colors.text,
+                    },
+                  ]}
+                  placeholder="Digite seu nome completo"
+                  placeholderTextColor={colors.placeholder}
+                  value={nome}
+                  onChangeText={setNome}
+                  keyboardType="default"
+                />
+                <HelperText
+                  type="error"
+                  visible={errors.account}
+                  style={{ color: colors.error }}
+                >
+                  Nome é obrigatório
+                </HelperText>
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text
+                  style={[
+                    styles.label,
+                    { fontSize: settings.fontSize, color: colors.text },
+                  ]}
+                >
+                  Agência - Conta - DV*
+                </Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    errors.account && styles.inputError,
+                    {
+                      fontSize: settings.fontSize,
+                      backgroundColor: colors.cardBackground,
+                      borderColor: colors.border,
+                      color: colors.text,
+                    },
+                  ]}
+                  placeholder="0000-000000-0"
+                  placeholderTextColor={colors.placeholder}
+                  value={account}
+                  onChangeText={setAccount}
                   keyboardType="numeric"
                 />
+                <HelperText
+                  type="error"
+                  visible={errors.account}
+                  style={{ color: colors.error }}
+                >
+                  Conta é obrigatória
+                </HelperText>
               </View>
-            </>
-          )}
-        </View>
+
+              {transferType === "third" && (
+                <>
+                  <View style={styles.inputContainer}>
+                    <Text
+                      style={[
+                        styles.label,
+                        { fontSize: settings.fontSize, color: colors.text },
+                      ]}
+                    >
+                      Nome do destinatário*
+                    </Text>
+                    <TextInput
+                      style={[
+                        styles.input,
+                        {
+                          fontSize: settings.fontSize,
+                          backgroundColor: colors.cardBackground,
+                          borderColor: colors.border,
+                          color: colors.text,
+                        },
+                      ]}
+                      placeholder="Digite o nome do destinatário"
+                      placeholderTextColor={colors.placeholder}
+                    />
+                  </View>
+                  <View style={styles.inputContainer}>
+                    <Text
+                      style={[
+                        styles.label,
+                        { fontSize: settings.fontSize, color: colors.text },
+                      ]}
+                    >
+                      CPF do destinatário*
+                    </Text>
+                    <TextInput
+                      style={[
+                        styles.input,
+                        {
+                          fontSize: settings.fontSize,
+                          backgroundColor: colors.cardBackground,
+                          borderColor: colors.border,
+                          color: colors.text,
+                        },
+                      ]}
+                      placeholder="000.000.000-00"
+                      placeholderTextColor={colors.placeholder}
+                      keyboardType="numeric"
+                    />
+                  </View>
+                </>
+              )}
+            </View>
+
+            <FinalidadePicker
+              value={finalidade}
+              onChange={setFinalidade}
+              error={errors.finalidade}
+            />
+          </>
+        )}
 
         <View style={[styles.card, { backgroundColor: colors.cardBackground }]}>
           <Text
@@ -389,7 +727,7 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
                 { fontSize: settings.fontSize, color: colors.text },
               ]}
             >
-              Valor (R$)
+              Valor (R$)**
             </Text>
             <TextInput
               style={[
@@ -433,82 +771,12 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
           </View>
         </View>
 
-        <View style={[styles.card, { backgroundColor: colors.cardBackground }]}>
-          <View style={styles.inputContainer}>
-            <Text
-              style={[
-                styles.label,
-                { fontSize: settings.fontSize, color: colors.text },
-              ]}
-            >
-              CPF ou CNPJ
-            </Text>
-            <TextInput
-              style={[
-                styles.input,
-                errors.cpfOuCNPJ && styles.inputError,
-                {
-                  fontSize: settings.fontSize,
-                  backgroundColor: colors.cardBackground,
-                  borderColor: colors.border,
-                  color: colors.text,
-                },
-              ]}
-              placeholder="000.000.000-00 ou 00.000.000/0000-00"
-              placeholderTextColor={colors.placeholder}
-              value={cpfOuCNPJ}
-              onChangeText={handleCpfOuCnpjChange}
-              keyboardType="numeric"
-            />
-            <HelperText
-              type="error"
-              visible={errors.cpfOuCNPJ}
-              style={{ color: colors.error }}
-            >
-              CPF ou CNPJ inválido
-            </HelperText>
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text
-              style={[
-                styles.label,
-                { fontSize: settings.fontSize, color: colors.text },
-              ]}
-            >
-              Finalidade da transferência
-            </Text>
-            <TextInput
-              style={[
-                styles.input,
-                errors.finalidade && styles.inputError,
-                {
-                  fontSize: settings.fontSize,
-                  backgroundColor: colors.cardBackground,
-                  borderColor: colors.border,
-                  color: colors.text,
-                },
-              ]}
-              placeholder="Descreva a finalidade"
-              placeholderTextColor={colors.placeholder}
-              value={finalidade}
-              onChangeText={setFinalidade}
-              keyboardType="default"
-            />
-            <HelperText
-              type="error"
-              visible={errors.finalidade}
-              style={{ color: colors.error }}
-            >
-              Finalidade é obrigatória
-            </HelperText>
-          </View>
-        </View>
-
         <TransferOptionsWithDate
           selectedDate={selectedDate}
           onDateChange={setSelectedDate}
         />
+
+        <WarningBox />
 
         <Button
           mode="contained"

@@ -11,23 +11,43 @@ export type TransferData = {
   recipientCPF?: string;
 };
 
+export type PixData = {
+  value: string;
+  pixKey: string;
+  recipientName?: string;
+};
+
 export type RootStackParamList = {
   Home: undefined;
   Acessibilidade: undefined;
+  AcessibilidadeHelp: undefined;
   TED: undefined;
+  Pix: undefined;
   Confirmation: { transferData: TransferData };
-  Success: undefined; 
-  // outras rotas 
+  PixConfirmation: { pixData: PixData };
+  Success: undefined;
+  History: undefined;
+  // outras rotas se necessário
 };
 
+// Tipos de navegação para cada tela
 export type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
 export type AcessibilidadeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Acessibilidade'>;
+export type AcessibilidadeHelpScreenNavigationProp = StackNavigationProp<RootStackParamList, 'AcessibilidadeHelp'>;
 export type TEDScreenNavigationProp = StackNavigationProp<RootStackParamList, 'TED'>;
+export type PixScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Pix'>;
 export type ConfirmationScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Confirmation'>;
+export type PixConfirmationScreenNavigationProp = StackNavigationProp<RootStackParamList, 'PixConfirmation'>;
 export type SuccessScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Success'>;
+export type HistoryScreenNavigationProp = StackNavigationProp<RootStackParamList, 'History'>;
 
+// Tipos de rota para cada tela
 export type HomeScreenRouteProp = RouteProp<RootStackParamList, 'Home'>;
 export type AcessibilidadeScreenRouteProp = RouteProp<RootStackParamList, 'Acessibilidade'>;
+export type AcessibilidadeHelpScreenRouteProp = RouteProp<RootStackParamList, 'AcessibilidadeHelp'>;
 export type TEDScreenRouteProp = RouteProp<RootStackParamList, 'TED'>;
+export type PixScreenRouteProp = RouteProp<RootStackParamList, 'Pix'>;
 export type ConfirmationScreenRouteProp = RouteProp<RootStackParamList, 'Confirmation'>;
+export type PixConfirmationScreenRouteProp = RouteProp<RootStackParamList, 'PixConfirmation'>;
 export type SuccessScreenRouteProp = RouteProp<RootStackParamList, 'Success'>;
+export type HistoryScreenRouteProp = RouteProp<RootStackParamList, 'History'>;

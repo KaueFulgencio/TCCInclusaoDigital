@@ -19,34 +19,16 @@ type TransferData = {
   date: string;
   recipientName?: string;
   recipientCPF?: string;
-};
-
-type ConfirmationScreenProps = {
-  navigation: StackNavigationProp<RootStackParamList, "Confirmation">;
-};
-
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return (
-    date.toLocaleDateString("pt-BR") +
-    " " +
-    date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
-  );
-};
-
-const getBankName = (code: string) => {
-  const bank = bancos.find((b) => b.codigo === code);
-  return bank ? `${code} - ${bank.nome}` : code;
+  identificacaoDeposito?: string;
+  historico?: string;
 };
 
 const ConfirmationScreen = () => {
-  const { settings } = useAccessibility();
+  const { settings, colors } = useAccessibility();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const route = useRoute();
   const transferData = (route.params as { transferData: TransferData })
     .transferData;
-
-  console.log("Dados recebidos:", transferData);
 
   const getTransferTypeText = () => {
     switch (transferData.transferType) {
@@ -54,6 +36,8 @@ const ConfirmationScreen = () => {
         return "Mesma titularidade";
       case "third":
         return "Para terceiros";
+      case "other":
+        return "Depósito Judicial";
       default:
         return transferData.transferType;
     }
@@ -73,20 +57,13 @@ const ConfirmationScreen = () => {
   const formatDate = (dateString: string) => {
     try {
       if (!dateString) return "Data não informada";
-
       const date = new Date(dateString);
-
-      if (isNaN(date.getTime())) {
-        return "Data inválida";
-      }
+      if (isNaN(date.getTime())) return "Data inválida";
 
       return (
         date.toLocaleDateString("pt-BR") +
         " " +
-        date.toLocaleTimeString("pt-BR", {
-          hour: "2-digit",
-          minute: "2-digit",
-        })
+        date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
       );
     } catch (error) {
       console.error("Erro ao formatar data:", error);
@@ -100,17 +77,16 @@ const ConfirmationScreen = () => {
 
   const formatCurrency = (value: string) => {
     const number = parseFloat(value);
-    if (isNaN(number)) return "R$ 0,00";
-
-    return number.toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    });
+    return isNaN(number)
+      ? "R$ 0,00"
+      : number.toLocaleString("pt-BR", {
+          style: "currency",
+          currency: "BRL",
+        });
   };
 
   const formatCpfCnpj = (value: string) => {
     const cleaned = value.replace(/\D/g, "");
-
     if (cleaned.length === 11) {
       return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
     } else if (cleaned.length === 14) {
@@ -119,15 +95,25 @@ const ConfirmationScreen = () => {
         "$1.$2.$3/$4-$5"
       );
     }
-
     return value;
+  };
+
+  const getBankName = (code: string) => {
+    const bank = bancos.find((b) => b.codigo === code);
+    return bank ? `${code} - ${bank.nome}` : code;
+  };
+
+  const formatAccount = (account: string) => {
+    if (!account) return "";
+    // Formata como 0000-000000-0
+    return account.replace(/(\d{4})(\d{6})(\d{1})/, "$1-$2-$3");
   };
 
   return (
     <ScrollView
       contentContainerStyle={[
         styles.container,
-        settings.highContrast && { backgroundColor: "#000" },
+        { backgroundColor: colors.background },
       ]}
     >
       <Text
@@ -135,7 +121,7 @@ const ConfirmationScreen = () => {
           styles.title,
           {
             fontSize: settings.fontSize + 4,
-            color: settings.highContrast ? "#fff" : "#000",
+            color: colors.text,
           },
         ]}
       >
@@ -145,156 +131,348 @@ const ConfirmationScreen = () => {
       <View
         style={[
           styles.detailContainer,
-          settings.highContrast && { backgroundColor: "#333" },
+          { backgroundColor: colors.cardBackground },
         ]}
       >
-        <Text style={[styles.detailTitle, { fontSize: settings.fontSize }]}>
+        <Text
+          style={[
+            styles.detailTitle,
+            { fontSize: settings.fontSize, color: colors.text },
+          ]}
+        >
           Tipo de Transferência:
         </Text>
-        <Text style={[styles.detailValue, { fontSize: settings.fontSize }]}>
+        <Text
+          style={[
+            styles.detailValue,
+            { fontSize: settings.fontSize, color: colors.text },
+          ]}
+        >
           {getTransferTypeText()}
         </Text>
       </View>
 
-      <View
-        style={[
-          styles.detailContainer,
-          settings.highContrast && { backgroundColor: "#333" },
-        ]}
-      >
-        <Text style={[styles.detailTitle, { fontSize: settings.fontSize }]}>
-          Banco:
-        </Text>
-        <Text style={[styles.detailValue, { fontSize: settings.fontSize }]}>
-          {getBankName(transferData.bank)}
-        </Text>
-      </View>
-
-      <View
-        style={[
-          styles.detailContainer,
-          settings.highContrast && { backgroundColor: "#333" },
-        ]}
-      >
-        <Text style={[styles.detailTitle, { fontSize: settings.fontSize }]}>
-          Tipo de Conta:
-        </Text>
-        <Text style={[styles.detailValue, { fontSize: settings.fontSize }]}>
-          {getAccountTypeText()}
-        </Text>
-      </View>
-
-      <View
-        style={[
-          styles.detailContainer,
-          settings.highContrast && { backgroundColor: "#333" },
-        ]}
-      >
-        <Text style={[styles.detailTitle, { fontSize: settings.fontSize }]}>
-          Agência/Conta:
-        </Text>
-        <Text style={[styles.detailValue, { fontSize: settings.fontSize }]}>
-          {transferData.account}
-        </Text>
-      </View>
-
-      <View
-        style={[
-          styles.detailContainer,
-          settings.highContrast && { backgroundColor: "#333" },
-        ]}
-      >
-        <Text style={[styles.detailTitle, { fontSize: settings.fontSize }]}>
-          Nome do Titular:
-        </Text>
-        <Text style={[styles.detailValue, { fontSize: settings.fontSize }]}>
-          {transferData.nome}
-        </Text>
-      </View>
-
-      <View
-        style={[
-          styles.detailContainer,
-          settings.highContrast && { backgroundColor: "#333" },
-        ]}
-      >
-        <Text style={[styles.detailTitle, { fontSize: settings.fontSize }]}>
-          CPF/CNPJ:
-        </Text>
-        <Text style={[styles.detailValue, { fontSize: settings.fontSize }]}>
-          {formatCpfCnpj(transferData.cpfOuCNPJ)}
-        </Text>
-      </View>
-
-      {transferData.transferType === "third" && (
+      {transferData.transferType === "other" ? (
         <>
           <View
             style={[
               styles.detailContainer,
-              settings.highContrast && { backgroundColor: "#333" },
+              { backgroundColor: colors.cardBackground },
             ]}
           >
-            <Text style={[styles.detailTitle, { fontSize: settings.fontSize }]}>
-              Destinatário:
+            <Text
+              style={[
+                styles.detailTitle,
+                { fontSize: settings.fontSize, color: colors.text },
+              ]}
+            >
+              Banco:
             </Text>
-            <Text style={[styles.detailValue, { fontSize: settings.fontSize }]}>
-              {transferData.recipientName}
+            <Text
+              style={[
+                styles.detailValue,
+                { fontSize: settings.fontSize, color: colors.text },
+              ]}
+            >
+              {getBankName(transferData.bank)}
             </Text>
           </View>
+
           <View
             style={[
               styles.detailContainer,
-              settings.highContrast && { backgroundColor: "#333" },
+              { backgroundColor: colors.cardBackground },
             ]}
           >
-            <Text style={[styles.detailTitle, { fontSize: settings.fontSize }]}>
-              CPF Destinatário:
+            <Text
+              style={[
+                styles.detailTitle,
+                { fontSize: settings.fontSize, color: colors.text },
+              ]}
+            >
+              Identificação do Depósito:
             </Text>
-            <Text style={[styles.detailValue, { fontSize: settings.fontSize }]}>
-              {transferData.recipientCPF}
+            <Text
+              style={[
+                styles.detailValue,
+                { fontSize: settings.fontSize, color: colors.text },
+              ]}
+            >
+              {transferData.identificacaoDeposito}
             </Text>
           </View>
+        </>
+      ) : (
+        <>
+          <View
+            style={[
+              styles.detailContainer,
+              { backgroundColor: colors.cardBackground },
+            ]}
+          >
+            <Text
+              style={[
+                styles.detailTitle,
+                { fontSize: settings.fontSize, color: colors.text },
+              ]}
+            >
+              Banco:
+            </Text>
+            <Text
+              style={[
+                styles.detailValue,
+                { fontSize: settings.fontSize, color: colors.text },
+              ]}
+            >
+              {getBankName(transferData.bank)}
+            </Text>
+          </View>
+
+          <View
+            style={[
+              styles.detailContainer,
+              { backgroundColor: colors.cardBackground },
+            ]}
+          >
+            <Text
+              style={[
+                styles.detailTitle,
+                { fontSize: settings.fontSize, color: colors.text },
+              ]}
+            >
+              Tipo de Conta:
+            </Text>
+            <Text
+              style={[
+                styles.detailValue,
+                { fontSize: settings.fontSize, color: colors.text },
+              ]}
+            >
+              {getAccountTypeText()}
+            </Text>
+          </View>
+
+          <View
+            style={[
+              styles.detailContainer,
+              { backgroundColor: colors.cardBackground },
+            ]}
+          >
+            <Text
+              style={[
+                styles.detailTitle,
+                { fontSize: settings.fontSize, color: colors.text },
+              ]}
+            >
+              Agência/Conta/DV:
+            </Text>
+            <Text
+              style={[
+                styles.detailValue,
+                { fontSize: settings.fontSize, color: colors.text },
+              ]}
+            >
+              {formatAccount(transferData.account)}
+            </Text>
+          </View>
+
+          <View
+            style={[
+              styles.detailContainer,
+              { backgroundColor: colors.cardBackground },
+            ]}
+          >
+            <Text
+              style={[
+                styles.detailTitle,
+                { fontSize: settings.fontSize, color: colors.text },
+              ]}
+            >
+              Nome do Titular:
+            </Text>
+            <Text
+              style={[
+                styles.detailValue,
+                { fontSize: settings.fontSize, color: colors.text },
+              ]}
+            >
+              {transferData.nome}
+            </Text>
+          </View>
+
+          <View
+            style={[
+              styles.detailContainer,
+              { backgroundColor: colors.cardBackground },
+            ]}
+          >
+            <Text
+              style={[
+                styles.detailTitle,
+                { fontSize: settings.fontSize, color: colors.text },
+              ]}
+            >
+              CPF/CNPJ:
+            </Text>
+            <Text
+              style={[
+                styles.detailValue,
+                { fontSize: settings.fontSize, color: colors.text },
+              ]}
+            >
+              {formatCpfCnpj(transferData.cpfOuCNPJ)}
+            </Text>
+          </View>
+
+          {transferData.transferType === "third" && (
+            <>
+              <View
+                style={[
+                  styles.detailContainer,
+                  { backgroundColor: colors.cardBackground },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.detailTitle,
+                    { fontSize: settings.fontSize, color: colors.text },
+                  ]}
+                >
+                  Destinatário:
+                </Text>
+                <Text
+                  style={[
+                    styles.detailValue,
+                    { fontSize: settings.fontSize, color: colors.text },
+                  ]}
+                >
+                  {transferData.recipientName}
+                </Text>
+              </View>
+              <View
+                style={[
+                  styles.detailContainer,
+                  { backgroundColor: colors.cardBackground },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.detailTitle,
+                    { fontSize: settings.fontSize, color: colors.text },
+                  ]}
+                >
+                  CPF Destinatário:
+                </Text>
+                <Text
+                  style={[
+                    styles.detailValue,
+                    { fontSize: settings.fontSize, color: colors.text },
+                  ]}
+                >
+                  {transferData.recipientCPF}
+                </Text>
+              </View>
+            </>
+          )}
+
+          {transferData.transferType === "same" && transferData.historico && (
+            <View
+              style={[
+                styles.detailContainer,
+                { backgroundColor: colors.cardBackground },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.detailTitle,
+                  { fontSize: settings.fontSize, color: colors.text },
+                ]}
+              >
+                Histórico:
+              </Text>
+              <Text
+                style={[
+                  styles.detailValue,
+                  { fontSize: settings.fontSize, color: colors.text },
+                ]}
+              >
+                {transferData.historico}
+              </Text>
+            </View>
+          )}
         </>
       )}
 
       <View
         style={[
           styles.detailContainer,
-          settings.highContrast && { backgroundColor: "#333" },
+          { backgroundColor: colors.cardBackground },
         ]}
       >
-        <Text style={[styles.detailTitle, { fontSize: settings.fontSize }]}>
+        <Text
+          style={[
+            styles.detailTitle,
+            { fontSize: settings.fontSize, color: colors.text },
+          ]}
+        >
           Valor:
         </Text>
-        <Text style={[styles.detailValue, { fontSize: settings.fontSize }]}>
+        <Text
+          style={[
+            styles.detailValue,
+            { fontSize: settings.fontSize, color: colors.text },
+          ]}
+        >
           {formatCurrency(transferData.value)}
         </Text>
       </View>
 
-      <View
-        style={[
-          styles.detailContainer,
-          settings.highContrast && { backgroundColor: "#333" },
-        ]}
-      >
-        <Text style={[styles.detailTitle, { fontSize: settings.fontSize }]}>
-          Finalidade:
-        </Text>
-        <Text style={[styles.detailValue, { fontSize: settings.fontSize }]}>
-          {transferData.finalidade}
-        </Text>
-      </View>
+      {transferData.finalidade && (
+        <View
+          style={[
+            styles.detailContainer,
+            { backgroundColor: colors.cardBackground },
+          ]}
+        >
+          <Text
+            style={[
+              styles.detailTitle,
+              { fontSize: settings.fontSize, color: colors.text },
+            ]}
+          >
+            Finalidade:
+          </Text>
+          <Text
+            style={[
+              styles.detailValue,
+              { fontSize: settings.fontSize, color: colors.text },
+            ]}
+          >
+            {transferData.finalidade}
+          </Text>
+        </View>
+      )}
 
       <View
         style={[
           styles.detailContainer,
-          settings.highContrast && { backgroundColor: "#333" },
+          { backgroundColor: colors.cardBackground },
         ]}
       >
-        <Text style={[styles.detailTitle, { fontSize: settings.fontSize }]}>
+        <Text
+          style={[
+            styles.detailTitle,
+            { fontSize: settings.fontSize, color: colors.text },
+          ]}
+        >
           Data/Hora:
         </Text>
-        <Text style={[styles.detailValue, { fontSize: settings.fontSize }]}>
+        <Text
+          style={[
+            styles.detailValue,
+            { fontSize: settings.fontSize, color: colors.text },
+          ]}
+        >
           {formatDate(transferData.date)}
         </Text>
       </View>
@@ -303,16 +481,19 @@ const ConfirmationScreen = () => {
         <Button
           mode="contained"
           onPress={handleConfirm}
-          style={[styles.button, { marginRight: 10 }]}
-          labelStyle={{ fontSize: settings.fontSize }}
+          style={[
+            styles.button,
+            { marginRight: 10, backgroundColor: colors.primary },
+          ]}
+          labelStyle={{ fontSize: settings.fontSize, color: colors.text }}
         >
           Confirmar
         </Button>
         <Button
           mode="outlined"
           onPress={() => navigation.goBack()}
-          style={styles.button}
-          labelStyle={{ fontSize: settings.fontSize }}
+          style={[styles.button, { borderColor: colors.primary }]}
+          labelStyle={{ fontSize: settings.fontSize, color: colors.primary }}
         >
           Voltar
         </Button>
@@ -324,7 +505,6 @@ const ConfirmationScreen = () => {
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    backgroundColor: "#f5f5f5",
   },
   title: {
     fontWeight: "bold",
@@ -332,7 +512,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   detailContainer: {
-    backgroundColor: "#fff",
     padding: 15,
     borderRadius: 8,
     marginBottom: 15,

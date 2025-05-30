@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { RadioButton } from 'react-native-paper';
 import { useAccessibility } from '../context/AccessibilityContext';
 
-type TransferType = 'same' | 'third';
+type TransferType = 'same' | 'third' | 'other';
 
 type Props = {
   value: TransferType;
@@ -79,6 +79,25 @@ const TransferTypeSelector: React.FC<Props> = ({ value, onChange, colors }) => {
             ]}
           >
             Entre Terceiros
+          </Text>
+        </View>
+
+        <View style={styles.radioOption}>
+          <RadioButton
+            value="other"
+            color={colors.radioButton}
+            uncheckedColor={colors.placeholder}
+          />
+          <Text
+            style={[
+              styles.radioText,
+              {
+                color: settings.highContrast ? '#fff' : colors.radioText,
+                fontSize: settings.fontSize,
+              },
+            ]}
+          >
+            TED para depósito judicial
           </Text>
         </View>
       </RadioButton.Group>

@@ -1,4 +1,3 @@
--- SQLite
 CREATE TABLE IF NOT EXISTS acessibilidade_logs (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   timestamp TEXT,

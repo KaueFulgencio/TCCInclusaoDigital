@@ -8,11 +8,18 @@ type AccessibilitySettings = {
   zoomEnabled: boolean;
 };
 
+type SessionData = {
+  startTime: number;
+  endTime: number | null;
+  screenFlow: string[];
+};
+
 type AnalyticsData = {
   executionTime: number;
   clickCount: number;
   lastAccessed: string;
   sessionCount?: number;
+  currentSession: SessionData;
 };
 
 type ExportAnalyticsResult = {
@@ -26,20 +33,26 @@ type AccessibilityColors = {
   border: string;
   placeholder: string;
   error: string;
+  primary: string;
+  background: string;
+  radioText: string;
+  radioButton: string;
 };
 
 type AccessibilityContextType = {
   settings: AccessibilitySettings;
   colors: AccessibilityColors;
   analytics: AnalyticsData;
-  updateSettings: (
-    newSettings: Partial<AccessibilitySettings>
-  ) => Promise<void>;
+  updateSettings: (newSettings: Partial<AccessibilitySettings>) => Promise<void>;
   incrementClickCount: () => void;
   updateExecutionTime: (time: number) => void;
   exportAnalytics: () => Promise<ExportAnalyticsResult>;
   listSavedAnalytics: () => Promise<string[]>;
   clearAnalytics: () => Promise<void>;
+  startNewSession: () => void;
+  recordScreenTransition: (screenName: string) => void;
+  endCurrentSession: () => void;
+  exportCompleteSessionData: () => Promise<any>;
 };
 
 const defaultSettings: AccessibilitySettings = {
@@ -53,6 +66,11 @@ const defaultAnalytics: AnalyticsData = {
   clickCount: 0,
   lastAccessed: new Date().toISOString(),
   sessionCount: 0,
+  currentSession: {
+    startTime: Date.now(),
+    endTime: null,
+    screenFlow: ['AppStart']
+  }
 };
 
 const defaultColors: AccessibilityColors = {
@@ -61,11 +79,15 @@ const defaultColors: AccessibilityColors = {
   border: "#ccc",
   placeholder: "#999",
   error: "red",
+  primary: "#0066CC",
+  background: "#F8F9FA",
+  radioText: "#333",
+  radioButton: "#0066CC",
 };
 
 const AccessibilityContext = createContext<AccessibilityContextType>({
   settings: defaultSettings,
-  colors: defaultColors, 
+  colors: defaultColors,
   analytics: defaultAnalytics,
   updateSettings: async () => {},
   incrementClickCount: () => {},
@@ -73,13 +95,16 @@ const AccessibilityContext = createContext<AccessibilityContextType>({
   exportAnalytics: async () => null,
   listSavedAnalytics: async () => [],
   clearAnalytics: async () => {},
+  startNewSession: () => {},
+  recordScreenTransition: () => {},
+  endCurrentSession: () => {},
+  exportCompleteSessionData: async () => null,
 });
 
 export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [settings, setSettings] =
-    useState<AccessibilitySettings>(defaultSettings);
+  const [settings, setSettings] = useState<AccessibilitySettings>(defaultSettings);
   const [analytics, setAnalytics] = useState<AnalyticsData>(defaultAnalytics);
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -95,10 +120,14 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
         if (savedSettings) setSettings(JSON.parse(savedSettings));
         if (savedAnalytics) {
           const parsedAnalytics = JSON.parse(savedAnalytics);
-          // Incrementa contador de sessões
           setAnalytics({
             ...parsedAnalytics,
             sessionCount: (parsedAnalytics.sessionCount || 0) + 1,
+            currentSession: {
+              startTime: Date.now(),
+              endTime: null,
+              screenFlow: ['AppStart']
+            }
           });
         }
       } catch (error) {
@@ -128,9 +157,7 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
     saveData();
   }, [settings, analytics, isLoaded]);
 
-  const updateSettings = async (
-    newSettings: Partial<AccessibilitySettings>
-  ) => {
+  const updateSettings = async (newSettings: Partial<AccessibilitySettings>) => {
     setSettings((prev) => ({ ...prev, ...newSettings }));
   };
 
@@ -149,23 +176,51 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
     }));
   };
 
+  const startNewSession = () => {
+    setAnalytics(prev => ({
+      ...prev,
+      currentSession: {
+        startTime: Date.now(),
+        endTime: null,
+        screenFlow: ['AppStart']
+      }
+    }));
+  };
+
+  const recordScreenTransition = (screenName: string) => {
+    setAnalytics(prev => ({
+      ...prev,
+      currentSession: {
+        ...prev.currentSession,
+        screenFlow: [...prev.currentSession.screenFlow, screenName]
+      }
+    }));
+  };
+
+  const endCurrentSession = () => {
+    const endTime = Date.now();
+    setAnalytics(prev => {
+      const sessionDuration = (endTime - prev.currentSession.startTime) / 1000;
+      return {
+        ...prev,
+        executionTime: prev.executionTime + sessionDuration,
+        currentSession: {
+          ...prev.currentSession,
+          endTime
+        }
+      };
+    });
+  };
+
   const exportAnalytics = async (): Promise<ExportAnalyticsResult> => {
     try {
       const analyticsData = await AsyncStorage.getItem("@analytics_data");
-
       if (analyticsData) {
         const parsedData = JSON.parse(analyticsData) as AnalyticsData;
-        const fileName = `analytics_${new Date()
-          .toISOString()
-          .replace(/[:.]/g, "-")}.json`;
+        const fileName = `analytics_${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
         const fileUri = `${FileSystem.documentDirectory}${fileName}`;
-
         await FileSystem.writeAsStringAsync(fileUri, analyticsData);
-
-        return {
-          filePath: fileUri,
-          data: parsedData,
-        };
+        return { filePath: fileUri, data: parsedData };
       }
       return null;
     } catch (error) {
@@ -174,19 +229,32 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const exportCompleteSessionData = async () => {
+    try {
+      const analyticsData = await AsyncStorage.getItem("@analytics_data");
+      if (analyticsData) {
+        const parsed = JSON.parse(analyticsData);
+        return {
+          ...parsed,
+          sessionDuration: parsed.currentSession.endTime 
+            ? (parsed.currentSession.endTime - parsed.currentSession.startTime) / 1000 
+            : null,
+          screenFlow: parsed.currentSession.screenFlow.join(' > ')
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error("Error exporting session data:", error);
+      return null;
+    }
+  };
+
   const listSavedAnalytics = async (): Promise<string[]> => {
     try {
       const directory = FileSystem.documentDirectory;
-      if (!directory) {
-        console.warn("Document directory not available");
-        return [];
-      }
-
+      if (!directory) return [];
       const files = await FileSystem.readDirectoryAsync(directory);
-
-      return files.filter(
-        (file) => file.startsWith("analytics_") && file.endsWith(".json")
-      );
+      return files.filter(file => file.startsWith("analytics_") && file.endsWith(".json"));
     } catch (error) {
       console.error("Error listing analytics files:", error);
       return [];
@@ -209,14 +277,12 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
         border: "#FFFFFF",
         placeholder: "#AAAAAA",
         error: "#FF6B6B",
+        primary: "#FFD700", 
+        background: "#121212", 
+        radioText: "#FFFFFF", 
+        radioButton: "#FFD700", 
       }
-    : {
-        cardBackground: "#FFFFFF",
-        text: "#000000",
-        border: "#CCCCCC",
-        placeholder: "#999999",
-        error: "#B00020",
-      };
+    : defaultColors;
 
   return (
     <AccessibilityContext.Provider
@@ -230,6 +296,10 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
         exportAnalytics,
         listSavedAnalytics,
         clearAnalytics,
+        startNewSession,
+        recordScreenTransition,
+        endCurrentSession,
+        exportCompleteSessionData,
       }}
     >
       {children}

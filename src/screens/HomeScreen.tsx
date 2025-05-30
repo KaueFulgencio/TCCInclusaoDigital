@@ -32,7 +32,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       marginVertical: 10,
       paddingVertical: zoomEnabled ? 20 : 15,
       borderRadius: 10,
-      backgroundColor: highContrast ? "#FFD700" : "#6200ee", // Amarelo no alto contraste
+      backgroundColor: highContrast ? "#FFD700" : "#6200ee",
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
@@ -47,6 +47,17 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     icon: {
       marginRight: 10,
       color: highContrast ? "#000" : "white",
+    },
+    analyticsContainer: {
+      marginTop: 20,
+      padding: 15,
+      borderRadius: 10,
+      backgroundColor: highContrast ? "#333" : "#e0e0e0",
+    },
+    analyticsText: {
+      fontSize: fontSize - 2,
+      color: highContrast ? "#fff" : "#333",
+      marginBottom: 5,
     },
   });
 
@@ -83,6 +94,48 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         />
         Transferência Eletrônica (TED)
       </Button>
+
+      <Button
+        mode="contained"
+        onPress={() => navigation.navigate("Pix")}
+        style={dynamicStyles.button}
+        labelStyle={dynamicStyles.buttonText}
+        contentStyle={dynamicStyles.buttonContent}
+      >
+        <Icon
+          name="cash-fast" 
+          size={24 + (zoomEnabled ? 6 : 0)}
+          style={dynamicStyles.icon}
+        />
+        Enviar PIX
+      </Button>
+
+      <Button
+        mode="contained"
+        onPress={() => navigation.navigate("History")}
+        style={dynamicStyles.button}
+        labelStyle={dynamicStyles.buttonText}
+        contentStyle={dynamicStyles.buttonContent}
+      >
+        <Icon
+          name="history"
+          size={24 + (zoomEnabled ? 6 : 0)}
+          style={dynamicStyles.icon}
+        />
+        Histórico de Transações
+      </Button>
+
+      <View style={dynamicStyles.analyticsContainer}>
+        <Text style={dynamicStyles.analyticsText}>
+          Último acesso: {lastAccessed || "N/A"}
+        </Text>
+        <Text style={dynamicStyles.analyticsText}>
+          Tempo médio: {executionTime ? `${executionTime}s` : "N/A"}
+        </Text>
+        <Text style={dynamicStyles.analyticsText}>
+          Interações: {clickCount || 0}
+        </Text>
+      </View>
     </ScrollView>
   );
 };

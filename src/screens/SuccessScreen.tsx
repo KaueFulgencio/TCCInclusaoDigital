@@ -13,7 +13,6 @@ const SuccessScreen = () => {
   const opacityAnim = new Animated.Value(0);
   const [showButton, setShowButton] = React.useState(false);
 
-  // Cores com acessibilidade
   const colors = {
     background: settings.highContrast ? "#000" : "#F8F9FA",
     text: settings.highContrast ? "#FFD700" : "#2F2F2F",
@@ -22,7 +21,6 @@ const SuccessScreen = () => {
   };
 
   useEffect(() => {
-    // Animação de entrada
     Animated.parallel([
       Animated.timing(scaleAnim, {
         toValue: 1,
