@@ -11,6 +11,7 @@ import AcessibilidadeHelpScreen from "../screens/AcessibilidadeHelpScreen";
 import PixScreen from "../screens/PixScreen";
 import HistoryScreen from "../screens/HistoryScreen";
 import {AppTracker} from "../../AppTracker";
+import TEDFlow from "../screens/TEDFlow";
 
 const Stack = createStackNavigator();
 
@@ -47,6 +48,8 @@ function NavigatorWithAccessibility() {
       <Stack.Screen name="AcessibilidadeHelp" component={AcessibilidadeHelpScreen} options={{ title: 'Ajuda' }} />
       <Stack.Screen name="Pix" component={PixScreen} options={{ title: 'Enviar PIX' }} />
       <Stack.Screen name="History" component={HistoryScreen} options={{ title: 'Histórico' }} />
+      <Stack.Screen name="TEDFlow" component={TEDFlow} options={{ title: 'Transferência TED CAIXA' }} />
+      
     </Stack.Navigator>
   );
 }

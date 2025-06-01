@@ -11,14 +11,14 @@ type HomeScreenProps = {
 };
 
 const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
-  const { 
-    settings, 
-    analytics, 
+  const {
+    settings,
+    analytics,
     uploadAnalyticsToFirebase,
     saveUserToFirebase,
-    saveTransactionToFirebase
+    saveTransactionToFirebase,
   } = useAccessibility();
-  
+
   const { fontSize, highContrast, zoomEnabled } = settings;
   const { executionTime, clickCount, lastAccessed } = analytics;
 
@@ -31,7 +31,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         accessCount: 1,
         settings: settings,
       };
-      
+
       await saveUserToFirebase(userData);
       alert("Usuário salvo com sucesso!");
     } catch (error) {
@@ -44,11 +44,11 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     try {
       const transactionData = {
         type: "PIX",
-        amount: 100.50,
+        amount: 100.5,
         recipient: "Test Recipient",
         status: "completed",
       };
-      
+
       await saveTransactionToFirebase(transactionData);
       alert("Transação teste salva com sucesso!");
     } catch (error) {
@@ -220,6 +220,21 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           style={dynamicStyles.icon}
         />
         Histórico de Transações
+      </Button>
+
+      <Button
+        mode="contained"
+        onPress={() => navigation.navigate("TEDFlow")}
+        style={dynamicStyles.button}
+        labelStyle={dynamicStyles.buttonText}
+        contentStyle={dynamicStyles.buttonContent}
+      >
+        <Icon
+          name="transfer"
+          size={24 + (zoomEnabled ? 6 : 0)}
+          style={dynamicStyles.icon}
+        />
+        Fluxo de TED CAIXA
       </Button>
 
       <View style={dynamicStyles.analyticsContainer}>

@@ -26,6 +26,8 @@ export type RootStackParamList = {
   PixConfirmation: { pixData: PixData };
   Success: undefined;
   History: undefined;
+  TEDFlow: undefined;
+  SuccessCAIXA: undefined;
 };
 
 export type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
@@ -37,6 +39,8 @@ export type ConfirmationScreenNavigationProp = StackNavigationProp<RootStackPara
 export type PixConfirmationScreenNavigationProp = StackNavigationProp<RootStackParamList, 'PixConfirmation'>;
 export type SuccessScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Success'>;
 export type HistoryScreenNavigationProp = StackNavigationProp<RootStackParamList, 'History'>;
+export type TEDFlowNavigationProp = StackNavigationProp<RootStackParamList, 'TEDFlow'>;
+export type SuccessScreenCAIXANavigationProp = StackNavigationProp<RootStackParamList, 'SuccessCAIXA'>;
 
 export type HomeScreenRouteProp = RouteProp<RootStackParamList, 'Home'>;
 export type AcessibilidadeScreenRouteProp = RouteProp<RootStackParamList, 'Acessibilidade'>;
@@ -47,3 +51,5 @@ export type ConfirmationScreenRouteProp = RouteProp<RootStackParamList, 'Confirm
 export type PixConfirmationScreenRouteProp = RouteProp<RootStackParamList, 'PixConfirmation'>;
 export type SuccessScreenRouteProp = RouteProp<RootStackParamList, 'Success'>;
 export type HistoryScreenRouteProp = RouteProp<RootStackParamList, 'History'>;
+export type TEDFlowRouteProp = RouteProp<RootStackParamList, 'TEDFlow'>;
+export type SuccessScreenCAIXARouteProp = RouteProp<RootStackParamList, 'SuccessCAIXA'>;
