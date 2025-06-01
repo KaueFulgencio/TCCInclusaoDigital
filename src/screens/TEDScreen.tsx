@@ -52,6 +52,7 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const startTimeRef = useRef(Date.now());
   const [clickCount, setClickCount] = useState(0);
+  const { incrementClickCount } = useAccessibility();
 
   useEffect(() => {
     (async () => {
@@ -118,7 +119,7 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
   };
 
   const handleTransfer = async () => {
-    setClickCount((prev) => prev + 1);
+    incrementClickCount();
 
     if (validateForm()) {
       const numericValue = parseCurrency(value);
@@ -144,6 +145,7 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
 
       const endTime = Date.now();
       const executionTimeInSeconds = (endTime - startTimeRef.current) / 1000;
+
       await saveLog(clickCount + 1, executionTimeInSeconds);
     }
   };

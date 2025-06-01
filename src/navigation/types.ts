@@ -1,4 +1,3 @@
-// src/navigation/types.ts
 import { RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 
@@ -27,10 +26,8 @@ export type RootStackParamList = {
   PixConfirmation: { pixData: PixData };
   Success: undefined;
   History: undefined;
-  // outras rotas se necessário
 };
 
-// Tipos de navegação para cada tela
 export type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
 export type AcessibilidadeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Acessibilidade'>;
 export type AcessibilidadeHelpScreenNavigationProp = StackNavigationProp<RootStackParamList, 'AcessibilidadeHelp'>;
@@ -41,7 +38,6 @@ export type PixConfirmationScreenNavigationProp = StackNavigationProp<RootStackP
 export type SuccessScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Success'>;
 export type HistoryScreenNavigationProp = StackNavigationProp<RootStackParamList, 'History'>;
 
-// Tipos de rota para cada tela
 export type HomeScreenRouteProp = RouteProp<RootStackParamList, 'Home'>;
 export type AcessibilidadeScreenRouteProp = RouteProp<RootStackParamList, 'Acessibilidade'>;
 export type AcessibilidadeHelpScreenRouteProp = RouteProp<RootStackParamList, 'AcessibilidadeHelp'>;

@@ -254,7 +254,7 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
   const incrementClickCount = () => {
     setAnalytics((prev) => ({
       ...prev,
-      clickCount: prev.clickCount + 1,
+      clickCount: (prev.clickCount || 0) + 1, 
       lastAccessed: new Date().toISOString(),
     }));
   };
@@ -400,13 +400,9 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
       saveUserToFirebase,
       saveTransactionToFirebase,
     }),
-    [
-      settings,
-      colors,
-      analytics,
-    ]
+    [settings, colors, analytics]
   );
-  
+
   return (
     <AccessibilityContext.Provider
       value={{

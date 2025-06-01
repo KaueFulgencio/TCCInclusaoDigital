@@ -105,7 +105,6 @@ const ConfirmationScreen = () => {
 
   const formatAccount = (account: string) => {
     if (!account) return "";
-    // Formata como 0000-000000-0
     return account.replace(/(\d{4})(\d{6})(\d{1})/, "$1-$2-$3");
   };
 

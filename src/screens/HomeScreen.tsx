@@ -22,7 +22,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const { fontSize, highContrast, zoomEnabled } = settings;
   const { executionTime, clickCount, lastAccessed } = analytics;
 
-  // Use useCallback para memoizar as funções e evitar recriações desnecessárias
   const handleSaveUser = useCallback(async () => {
     try {
       const userData = {
@@ -68,7 +67,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     }
   }, [uploadAnalyticsToFirebase]);
 
-  // Estilos também devem ser memoizados se dependem de props/state que mudam frequentemente
   const dynamicStyles = StyleSheet.create({
     container: {
       flexGrow: 1,
