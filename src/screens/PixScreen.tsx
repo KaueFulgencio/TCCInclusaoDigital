@@ -1,101 +1,138 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, TextInput, TouchableOpacity, FlatList } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useAccessibility } from '../context/AccessibilityContext';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../navigation/types';
+import React, { useState, useEffect, useRef } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  FlatList,
+} from "react-native";
+import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+import { useAccessibility } from "../context/AccessibilityContext";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { RootStackParamList } from "../navigation/types";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "../../firebase";
 
 type PixScreenProps = {
-  navigation: StackNavigationProp<RootStackParamList, 'Pix'>;
+  navigation: StackNavigationProp<RootStackParamList, "Pix">;
 };
 
 const PixScreen: React.FC<PixScreenProps> = ({ navigation }) => {
-  const { 
-    settings, 
-    colors, 
-    incrementClickCount,
-    recordScreenTransition,
-    endCurrentSession,
-    startNewSession,
-    saveTransactionToFirebase,
-    uploadAnalyticsToFirebase,
-    analytics
-  } = useAccessibility();
-  
-  const [amount, setAmount] = useState('');
-  const [formattedAmount, setFormattedAmount] = useState('0,00');
-  const [pixKey, setPixKey] = useState('');
+  const { settings, colors, incrementClickCount } = useAccessibility();
+
+  const [amount, setAmount] = useState("");
+  const [formattedAmount, setFormattedAmount] = useState("0,00");
+  const [pixKey, setPixKey] = useState("");
   const [step, setStep] = useState(1);
   const [showContacts, setShowContacts] = useState(false);
-  const [currentTime, setCurrentTime] = useState('');
+  const [currentTime, setCurrentTime] = useState("");
+  const [clickCount, setClickCount] = useState(0);
+  const startTimeRef = useRef(Date.now());
 
   const contacts = [
-    { id: 1, name: 'João Silva', key: '123.456.789-00', keyType: 'CPF' },
-    { id: 2, name: 'Maria Souza', key: 'maria.souza@email.com', keyType: 'E-mail' },
-    { id: 3, name: 'Empresa XYZ', key: '+55 11 98765-4321', keyType: 'Telefone' },
-    { id: 4, name: 'Carlos Oliveira', key: 'carlos.oliveira@email.com', keyType: 'E-mail' },
-    { id: 5, name: 'Ana Santos', key: '987.654.321-00', keyType: 'CPF' },
+    { id: 1, name: "João Silva", key: "123.456.789-00", keyType: "CPF" },
+    {
+      id: 2,
+      name: "Maria Souza",
+      key: "maria.souza@email.com",
+      keyType: "E-mail",
+    },
+    {
+      id: 3,
+      name: "Empresa XYZ",
+      key: "+55 11 98765-4321",
+      keyType: "Telefone",
+    },
+    {
+      id: 4,
+      name: "Carlos Oliveira",
+      key: "carlos.oliveira@email.com",
+      keyType: "E-mail",
+    },
+    { id: 5, name: "Ana Santos", key: "987.654.321-00", keyType: "CPF" },
   ];
 
+  const handlePress = () => {
+    setClickCount((prev) => {
+      const newCount = prev + 1;
+      console.log("Clique registrado. Total:", newCount);
+      return newCount;
+    });
+  };
+
   const formatCurrency = (value: string) => {
-    let numericValue = value.replace(/\D/g, '');
-    numericValue = numericValue.padStart(3, '0');
-    
+    let numericValue = value.replace(/\D/g, "");
+    numericValue = numericValue.padStart(3, "0");
+
     const real = numericValue.slice(0, -2);
     const cents = numericValue.slice(-2);
-    
-    return `${real ? parseInt(real).toLocaleString('pt-BR') : '0'},${cents}`;
+
+    return `${real ? parseInt(real).toLocaleString("pt-BR") : "0"},${cents}`;
   };
 
   useEffect(() => {
-    recordScreenTransition('PixScreen');
     setFormattedAmount(formatCurrency(amount));
   }, [amount]);
 
   useEffect(() => {
     const now = new Date();
-    setCurrentTime(now.toLocaleTimeString('pt-BR', {
-      hour: '2-digit',
-      minute: '2-digit',
-    }));
+    setCurrentTime(
+      now.toLocaleTimeString("pt-BR", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    );
   }, []);
 
+  const uploadAnalyticsToFirebase = async (executionTime: number) => {
+    try {
+      const dataToSend = {
+        clickCount,
+        executionTime,
+        currentTime: new Date().toLocaleString("pt-BR"),
+        timestamp: serverTimestamp(),
+        screen: "PixScreen",
+      };
+
+      await addDoc(collection(db, "pix_analytics"), dataToSend);
+      console.log("Dados enviados para o Firebase com sucesso!");
+      return true;
+    } catch (error) {
+      console.error("Erro ao enviar dados para o Firebase:", error);
+      return false;
+    }
+  };
+
   const handleContinue = async () => {
-    incrementClickCount();
-    
+    handlePress();
+
     if (step < 3) {
       setStep(step + 1);
     } else {
-      // Finaliza a sessão e salva os dados
-      endCurrentSession();
-      
       try {
-        // Primeiro salva a transação
-        const transactionSaved = await saveTransactionToFirebase({
-          amount: formattedAmount,
-          pixKey: pixKey,
-          userId: "testUser123", 
-          type: "PIX",
-          status: "completed"
-        });
-        
-        if (transactionSaved) {
-          // Depois envia os analytics
-          const analyticsSent = await uploadAnalyticsToFirebase("testUser123");
-          
-          if (analyticsSent) {
-            // Inicia uma nova sessão limpa
-            startNewSession();
-            
-            // Navega para tela de sucesso
-            navigation.navigate('Success');
-          } else {
-            console.error("Falha ao enviar analytics");
-            alert("Ocorreu um erro ao registrar os dados de uso");
-          }
+        const endTime = Date.now();
+        const executionTime = (endTime - startTimeRef.current) / 1000;
+
+        const success = await uploadAnalyticsToFirebase(executionTime);
+
+        const transferData = {
+          transferType: "Pix",
+          bank: "",
+          account: "",
+          value: amount,
+          recipientName: "",
+        };
+
+        if (success) {
+          navigation.navigate("Success", {
+            transferData,
+            clickCount,
+            executionTime,
+          });
         } else {
-          console.error("Falha ao salvar transação");
-          alert("Ocorreu um erro ao processar sua transação");
+          alert("Ocorreu um erro ao registrar os dados");
         }
       } catch (error) {
         console.error("Erro ao processar transação:", error);
@@ -104,8 +141,8 @@ const PixScreen: React.FC<PixScreenProps> = ({ navigation }) => {
     }
   };
 
-  const handleContactSelect = (contact: typeof contacts[0]) => {
-    incrementClickCount();
+  const handleContactSelect = (contact: (typeof contacts)[0]) => {
+    handlePress();
     setPixKey(contact.key);
     setShowContacts(false);
   };
@@ -114,44 +151,47 @@ const PixScreen: React.FC<PixScreenProps> = ({ navigation }) => {
     <ScrollView
       contentContainerStyle={[
         styles.container,
-        { backgroundColor: colors.cardBackground }
+        { backgroundColor: colors.cardBackground },
       ]}
     >
-      <Text style={[
-        styles.title,
-        {
-          fontSize: settings.fontSize + 4,
-          color: colors.text
-        }
-      ]}>
-        {step === 1 && 'Enviar PIX'}
-        {step === 2 && !showContacts && 'Informe a Chave'}
-        {step === 2 && showContacts && 'Selecione um Contato'}
-        {step === 3 && 'Confirme os Dados'}
+      <Text
+        style={[
+          styles.title,
+          {
+            fontSize: settings.fontSize + 4,
+            color: colors.text,
+          },
+        ]}
+      >
+        {step === 1 && "Enviar PIX"}
+        {step === 2 && !showContacts && "Informe a Chave"}
+        {step === 2 && showContacts && "Selecione um Contato"}
+        {step === 3 && "Confirme os Dados"}
       </Text>
 
       {step === 1 && (
         <View style={styles.stepContainer}>
-          <Text style={[
-            styles.label,
-            {
-              fontSize: settings.fontSize,
-              color: colors.text
-            }
-          ]}>
-            Valor a enviar
-          </Text>
-          <View style={[
-            styles.inputContainer,
-            { borderColor: colors.border }
-          ]}>
-            <Text style={[
-              styles.currencySymbol,
+          <Text
+            style={[
+              styles.label,
               {
                 fontSize: settings.fontSize,
-                color: colors.text
-              }
-            ]}>
+                color: colors.text,
+              },
+            ]}
+          >
+            Valor a enviar
+          </Text>
+          <View style={[styles.inputContainer, { borderColor: colors.border }]}>
+            <Text
+              style={[
+                styles.currencySymbol,
+                {
+                  fontSize: settings.fontSize,
+                  color: colors.text,
+                },
+              ]}
+            >
               R$
             </Text>
             <TextInput
@@ -159,24 +199,29 @@ const PixScreen: React.FC<PixScreenProps> = ({ navigation }) => {
                 styles.input,
                 {
                   fontSize: settings.fontSize,
-                  color: colors.text
-                }
+                  color: colors.text,
+                },
               ]}
               value={amount}
-              onChangeText={setAmount}
+              onChangeText={(text) => {
+                setAmount(text);
+              }}
               placeholder="0,00"
               placeholderTextColor={colors.placeholder}
               keyboardType="numeric"
               accessibilityLabel="Campo para inserir o valor do PIX"
+              onFocus={handlePress}
             />
             {amount && (
-              <Text style={[
-                styles.formattedValue,
-                {
-                  fontSize: settings.fontSize,
-                  color: colors.placeholder
-                }
-              ]}>
+              <Text
+                style={[
+                  styles.formattedValue,
+                  {
+                    fontSize: settings.fontSize,
+                    color: colors.placeholder,
+                  },
+                ]}
+              >
                 {formattedAmount}
               </Text>
             )}
@@ -186,62 +231,74 @@ const PixScreen: React.FC<PixScreenProps> = ({ navigation }) => {
 
       {step === 2 && !showContacts && (
         <View style={styles.stepContainer}>
-          <Text style={[
-            styles.label,
-            {
-              fontSize: settings.fontSize,
-              color: colors.text
-            }
-          ]}>
+          <Text
+            style={[
+              styles.label,
+              {
+                fontSize: settings.fontSize,
+                color: colors.text,
+              },
+            ]}
+          >
             Chave PIX
           </Text>
-          <View style={[
-            styles.inputContainer,
-            { borderColor: colors.border }
-          ]}>
+          <View style={[styles.inputContainer, { borderColor: colors.border }]}>
             <TextInput
               style={[
                 styles.input,
                 {
                   fontSize: settings.fontSize,
-                  color: colors.text
-                }
+                  color: colors.text,
+                },
               ]}
               value={pixKey}
-              onChangeText={setPixKey}
+              onChangeText={(text) => {
+                setPixKey(text);
+              }}
               placeholder="CPF, e-mail, telefone ou chave aleatória"
               placeholderTextColor={colors.placeholder}
               accessibilityLabel="Campo para inserir a chave PIX"
+              onFocus={handlePress}
             />
           </View>
           <View style={styles.pixKeyOptions}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.pixKeyOption}
-              onPress={() => console.log('QR Code pressed')}
+              onPress={() => {
+                handlePress();
+                console.log("QR Code pressed");
+              }}
             >
               <Icon name="qrcode-scan" size={24} color={colors.text} />
-              <Text style={[
-                styles.pixKeyOptionText,
-                {
-                  fontSize: settings.fontSize,
-                  color: colors.text
-                }
-              ]}>
+              <Text
+                style={[
+                  styles.pixKeyOptionText,
+                  {
+                    fontSize: settings.fontSize,
+                    color: colors.text,
+                  },
+                ]}
+              >
                 Ler QR Code
               </Text>
             </TouchableOpacity>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.pixKeyOption}
-              onPress={() => setShowContacts(true)}
+              onPress={() => {
+                handlePress();
+                setShowContacts(true);
+              }}
             >
               <Icon name="contacts" size={24} color={colors.text} />
-              <Text style={[
-                styles.pixKeyOptionText,
-                {
-                  fontSize: settings.fontSize,
-                  color: colors.text
-                }
-              ]}>
+              <Text
+                style={[
+                  styles.pixKeyOptionText,
+                  {
+                    fontSize: settings.fontSize,
+                    color: colors.text,
+                  },
+                ]}
+              >
                 Contatos
               </Text>
             </TouchableOpacity>
@@ -251,19 +308,24 @@ const PixScreen: React.FC<PixScreenProps> = ({ navigation }) => {
 
       {step === 2 && showContacts && (
         <View style={styles.stepContainer}>
-          <TouchableOpacity 
-            onPress={() => setShowContacts(false)}
+          <TouchableOpacity
+            onPress={() => {
+              handlePress();
+              setShowContacts(false);
+            }}
             style={styles.backButton}
           >
             <Icon name="arrow-left" size={24} color={colors.text} />
-            <Text style={[
-              styles.backButtonText,
-              {
-                fontSize: settings.fontSize,
-                color: colors.text,
-                marginLeft: 10
-              }
-            ]}>
+            <Text
+              style={[
+                styles.backButtonText,
+                {
+                  fontSize: settings.fontSize,
+                  color: colors.text,
+                  marginLeft: 10,
+                },
+              ]}
+            >
               Voltar
             </Text>
           </TouchableOpacity>
@@ -272,10 +334,10 @@ const PixScreen: React.FC<PixScreenProps> = ({ navigation }) => {
             data={contacts}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[
                   styles.contactItem,
-                  { backgroundColor: colors.cardBackground }
+                  { backgroundColor: colors.cardBackground },
                 ]}
                 onPress={() => handleContactSelect(item)}
               >
@@ -283,22 +345,26 @@ const PixScreen: React.FC<PixScreenProps> = ({ navigation }) => {
                   <Icon name="account-circle" size={40} color={colors.text} />
                 </View>
                 <View style={styles.contactInfo}>
-                  <Text style={[
-                    styles.contactName,
-                    {
-                      fontSize: settings.fontSize,
-                      color: colors.text
-                    }
-                  ]}>
+                  <Text
+                    style={[
+                      styles.contactName,
+                      {
+                        fontSize: settings.fontSize,
+                        color: colors.text,
+                      },
+                    ]}
+                  >
                     {item.name}
                   </Text>
-                  <Text style={[
-                    styles.contactKey,
-                    {
-                      fontSize: settings.fontSize - 2,
-                      color: colors.placeholder
-                    }
-                  ]}>
+                  <Text
+                    style={[
+                      styles.contactKey,
+                      {
+                        fontSize: settings.fontSize - 2,
+                        color: colors.placeholder,
+                      },
+                    ]}
+                  >
                     {item.keyType}: {item.key}
                   </Text>
                 </View>
@@ -311,104 +377,124 @@ const PixScreen: React.FC<PixScreenProps> = ({ navigation }) => {
 
       {step === 3 && (
         <View style={styles.stepContainer}>
-          <View style={[
-            styles.confirmationCard,
-            { 
-              backgroundColor: colors.cardBackground, 
-              borderColor: colors.border 
-            }
-          ]}>
-            <Text style={[
-              styles.confirmationTitle,
+          <View
+            style={[
+              styles.confirmationCard,
               {
-                fontSize: settings.fontSize + 2,
-                color: colors.text,
-                marginBottom: 20
-              }
-            ]}>
+                backgroundColor: colors.cardBackground,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.confirmationTitle,
+                {
+                  fontSize: settings.fontSize + 2,
+                  color: colors.text,
+                  marginBottom: 20,
+                },
+              ]}
+            >
               Confirmação de Transferência
             </Text>
 
             <View style={styles.confirmationRow}>
-              <Text style={[
-                styles.confirmationLabel,
-                {
-                  fontSize: settings.fontSize,
-                  color: colors.placeholder
-                }
-              ]}>
+              <Text
+                style={[
+                  styles.confirmationLabel,
+                  {
+                    fontSize: settings.fontSize,
+                    color: colors.placeholder,
+                  },
+                ]}
+              >
                 Valor:
               </Text>
-              <Text style={[
-                styles.confirmationValue,
-                {
-                  fontSize: settings.fontSize + 4,
-                  color: colors.text
-                }
-              ]}>
+              <Text
+                style={[
+                  styles.confirmationValue,
+                  {
+                    fontSize: settings.fontSize + 4,
+                    color: colors.text,
+                  },
+                ]}
+              >
                 R$ {formattedAmount}
               </Text>
             </View>
 
             <View style={styles.confirmationRow}>
-              <Text style={[
-                styles.confirmationLabel,
-                {
-                  fontSize: settings.fontSize,
-                  color: colors.placeholder
-                }
-              ]}>
+              <Text
+                style={[
+                  styles.confirmationLabel,
+                  {
+                    fontSize: settings.fontSize,
+                    color: colors.placeholder,
+                  },
+                ]}
+              >
                 Para:
               </Text>
-              <Text style={[
-                styles.confirmationValue,
-                {
-                  fontSize: settings.fontSize + 2,
-                  color: colors.text
-                }
-              ]}>
-                {pixKey || 'Chave não informada'}
+              <Text
+                style={[
+                  styles.confirmationValue,
+                  {
+                    fontSize: settings.fontSize + 2,
+                    color: colors.text,
+                  },
+                ]}
+              >
+                {pixKey || "Chave não informada"}
               </Text>
             </View>
 
             <View style={styles.confirmationRow}>
-              <Text style={[
-                styles.confirmationLabel,
-                {
-                  fontSize: settings.fontSize,
-                  color: colors.placeholder
-                }
-              ]}>
+              <Text
+                style={[
+                  styles.confirmationLabel,
+                  {
+                    fontSize: settings.fontSize,
+                    color: colors.placeholder,
+                  },
+                ]}
+              >
                 Data/Hora:
               </Text>
-              <Text style={[
-                styles.confirmationValue,
-                {
-                  fontSize: settings.fontSize,
-                  color: colors.text
-                }
-              ]}>
-                {new Date().toLocaleDateString('pt-BR')} às {currentTime}
+              <Text
+                style={[
+                  styles.confirmationValue,
+                  {
+                    fontSize: settings.fontSize,
+                    color: colors.text,
+                  },
+                ]}
+              >
+                {new Date().toLocaleDateString("pt-BR")} às {currentTime}
               </Text>
             </View>
 
             <View style={styles.confirmationRow}>
-              <Text style={[
-                styles.confirmationLabel,
-                {
-                  fontSize: settings.fontSize,
-                  color: colors.placeholder
-                }
-              ]}>
+              <Text
+                style={[
+                  styles.confirmationLabel,
+                  {
+                    fontSize: settings.fontSize,
+                    color: colors.placeholder,
+                  },
+                ]}
+              >
                 Tipo:
               </Text>
-              <Text style={[
-                styles.confirmationValue,
-                {
-                  fontSize: settings.fontSize,
-                  color: colors.text
-                }
-              ]}>
+              <Text
+                style={[
+                  styles.confirmationValue,
+                  {
+                    fontSize: settings.fontSize,
+                    color: colors.text,
+                  },
+                ]}
+              >
                 PIX
               </Text>
             </View>
@@ -418,21 +504,24 @@ const PixScreen: React.FC<PixScreenProps> = ({ navigation }) => {
 
       {!showContacts && (
         <TouchableOpacity
-          style={[
-            styles.continueButton,
-            { backgroundColor: colors.primary }
-          ]}
+          style={[styles.continueButton, { backgroundColor: colors.primary }]}
           onPress={handleContinue}
-          accessibilityLabel={step < 3 ? 'Continuar para o próximo passo' : 'Confirmar transferência PIX'}
+          accessibilityLabel={
+            step < 3
+              ? "Continuar para o próximo passo"
+              : "Confirmar transferência PIX"
+          }
         >
-          <Text style={[
-            styles.continueButtonText,
-            {
-              fontSize: settings.fontSize,
-              color: colors.cardBackground
-            }
-          ]}>
-            {step < 3 ? 'Continuar' : 'Confirmar PIX'}
+          <Text
+            style={[
+              styles.continueButtonText,
+              {
+                fontSize: settings.fontSize,
+                color: colors.cardBackground,
+              },
+            ]}
+          >
+            {step < 3 ? "Continuar" : "Confirmar PIX"}
           </Text>
         </TouchableOpacity>
       )}
@@ -446,9 +535,9 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   title: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 30,
-    textAlign: 'center',
+    textAlign: "center",
   },
   stepContainer: {
     marginBottom: 30,
@@ -457,61 +546,61 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 15,
     paddingVertical: 10,
-    position: 'relative',
+    position: "relative",
   },
   currencySymbol: {
     marginRight: 10,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   input: {
     flex: 1,
-    paddingRight: 80, // Espaço para o valor formatado
+    paddingRight: 80,
   },
   formattedValue: {
-    position: 'absolute',
+    position: "absolute",
     right: 15,
   },
   pixKeyOptions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginTop: 20,
   },
   pixKeyOption: {
-    alignItems: 'center',
+    alignItems: "center",
     padding: 15,
     borderRadius: 8,
-    width: '48%',
+    width: "48%",
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
   },
   pixKeyOptionText: {
     marginTop: 10,
   },
   backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 20,
   },
   backButtonText: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   contactsList: {
-    width: '100%',
+    width: "100%",
     maxHeight: 400,
   },
   contactItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 15,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#eee',
+    borderColor: "#eee",
     marginBottom: 10,
   },
   contactAvatar: {
@@ -521,7 +610,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contactName: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   contactKey: {
     marginTop: 4,
@@ -533,41 +622,29 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   confirmationTitle: {
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: "bold",
+    textAlign: "center",
   },
   confirmationRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 15,
   },
   confirmationLabel: {},
   confirmationValue: {
-    fontWeight: 'bold',
-    textAlign: 'right',
+    fontWeight: "bold",
+    textAlign: "right",
     flex: 1,
   },
   continueButton: {
     padding: 15,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 20,
   },
   continueButtonText: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });
 
 export default PixScreen;
-
-function uploadAnalyticsToFirebase(arg0: string) {
-  throw new Error('Function not implemented.');
-}
-function startNewSession() {
-  throw new Error('Function not implemented.');
-}
-
-function saveTransactionToFirebase(arg0: { amount: string; pixKey: string; userId: string; type: string; status: string; }) {
-  throw new Error('Function not implemented.');
-}
-
