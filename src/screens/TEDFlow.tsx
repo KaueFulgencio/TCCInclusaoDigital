@@ -5,6 +5,8 @@ import TEDConfirmation from "../components/CAIXA/TEDConfirmation";
 import TEDSuccess from "../components/CAIXA/TEDSuccess";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "../../firebase";
+import { useNavigation } from "@react-navigation/native";
+import { TEDFlowNavigationProp } from "../navigation/types";
 
 export type TransferType = "same" | "third" | "judicial";
 
@@ -64,11 +66,10 @@ const TEDFlow = () => {
   const [formData, setFormData] = useState<TEDFormData | null>(null);
   const [startTime, setStartTime] = useState<number>(Date.now());
   const [durationInSeconds, setDurationInSeconds] = useState<number>(0);
+  const navigation = useNavigation<TEDFlowNavigationProp>();
 
-  // Contador de cliques
   const [clickCount, setClickCount] = useState(0);
 
-  // Incrementa contador e exibe log
   const handleClick = () => {
     setClickCount((prev) => {
       const newCount = prev + 1;
@@ -125,13 +126,14 @@ const TEDFlow = () => {
 
     await uploadAnalyticsToFirebase(newClickCount, durationInSeconds);
 
-    // Resetar fluxo e contador
     setStep("select");
     setTransferType(null);
     setFormData(null);
     setStartTime(Date.now());
     setClickCount(0);
     setDurationInSeconds(durationInSeconds);
+
+    navigation.navigate("Home");
   };
 
   switch (step) {

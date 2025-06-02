@@ -29,12 +29,10 @@ const TEDSuccess = ({
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
-        {/* Header superior com título */}
         <View style={styles.titleContainer}>
           <Text style={styles.title}>Comprovante TED</Text>
         </View>
 
-        {/* Logo Caixa */}
         <View style={styles.headerContainer}>
           <Image
             source={require("../../../assets/caixa-logo-01.png")}
@@ -43,7 +41,6 @@ const TEDSuccess = ({
           />
         </View>
 
-        {/* Box de valor e data */}
         <View style={styles.topBox}>
           <View style={styles.boxLeft}>
             <Text style={styles.boxLabel}>Valor</Text>
@@ -59,14 +56,12 @@ const TEDSuccess = ({
           </View>
         </View>
 
-        {/* Mensagem de sucesso */}
         <View style={styles.successContainer}>
           <Text style={styles.successText}>
             ✅ Operação realizada com sucesso!
           </Text>
         </View>
 
-        {/* Dados do Pagador */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Dados do Pagador</Text>
           <View style={styles.underline} />
@@ -101,7 +96,6 @@ const TEDSuccess = ({
           )}
         </View>
 
-        {/* Dados do Recebedor */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
             {type === "judicial"
@@ -158,7 +152,6 @@ const TEDSuccess = ({
           )}
         </View>
 
-        {/* Botão */}
         <TouchableOpacity style={styles.button} onPress={handleContinue}>
           <Text style={styles.buttonText}>Continuar</Text>
         </TouchableOpacity>
