@@ -1,43 +1,221 @@
-import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import React from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  Alert,
+} from "react-native";
 
-const TEDConfirmation = ({ data, onBack, onConfirm }: any) => {
-  const [password, setPassword] = React.useState('');
+interface TEDConfirmationProps {
+  data: {
+    originAccount: string;
+    bank: string;
+    accountType: string;
+    agency: string;
+    account: string;
+    digit: string;
+    personType: string;
+    name: string;
+    cpf: string;
+    value: string;
+    purpose: string;
+    history: string;
+  };
+  type: "same" | "third" | "judicial";
+  onBack: () => void;
+  onConfirm: (password: string) => void;
+}
+
+const TEDConfirmation: React.FC<TEDConfirmationProps> = ({
+  data,
+  type,
+  onBack,
+  onConfirm,
+}) => {
+  const [password, setPassword] = React.useState("");
+
+  const getTitleByType = (type: string) => {
+    switch (type) {
+      case "same":
+        return "Verificação de TED - mesma titularidade";
+      case "third":
+        return "Verificação de TED - terceiros";
+      case "judicial":
+        return "Verificação de TED - judicial";
+      default:
+        return "Verificação de TED";
+    }
+  };
+
+  const handleConfirm = () => {
+    if (!password) {
+      Alert.alert("Atenção", "Por favor, digite sua senha de transação.");
+      return;
+    }
+    onConfirm(password);
+  };
+
+  const {
+    originAccount,
+    bank,
+    accountType,
+    agency,
+    account,
+    digit,
+    personType,
+    name,
+    cpf,
+    value,
+    purpose,
+    history,
+  } = data;
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Verificação de TED</Text>
-      <Text>Confira os dados informados:</Text>
-
-      <View style={styles.box}>
-        <Text>Banco: {data.bank}</Text>
-        <Text>Conta: {data.agency}-{data.account}-{data.digit}</Text>
-        <Text>Nome: {data.name}</Text>
-        <Text>CPF/CNPJ: {data.cpf}</Text>
-        <Text>Valor: R$ {data.value}</Text>
-        <Text>Tarifa: R$ 12,00</Text>
+    <ScrollView contentContainerStyle={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerText}>{getTitleByType(type)}</Text>
       </View>
 
-      <TextInput style={styles.input} placeholder="Senha de transação" secureTextEntry value={password} onChangeText={setPassword} />
+      <Text style={styles.infoText}>
+        Confira os dados informados, digite abaixo a senha da transação de sua
+        conta, selecione CONFIRMAR e aguarde o comprovante.
+      </Text>
 
-      <TouchableOpacity style={styles.continueButton} onPress={onConfirm}>
-        <Text style={styles.buttonText}>Continuar</Text>
+      <View style={styles.dataBox}>
+        <InfoItem label="Conta de origem" value={originAccount || "0000-0"} />
+        <InfoItem label="Banco" value={bank} />
+        <InfoItem label="Tipo de conta a ser creditada" value={accountType} />
+        <InfoItem
+          label="Conta destino"
+          value={`${agency || "----"}-${account || "----"}-${digit || "-"}`}
+        />
+        <InfoItem label="Tipo de pessoa destino" value={personType} />
+        <InfoItem label="Nome do destinatário" value={name} />
+        <InfoItem label="CPF/CNPJ do destinatário" value={cpf} />
+        <InfoItem label="Valor" value={`R$ ${value}`} />
+        <InfoItem label="Valor da tarifa" value={`R$ 12,00`} />
+        <InfoItem label="Finalidade" value={purpose} />
+        <InfoItem label="Histórico" value={history} />
+      </View>
+
+      <View style={styles.warningBox}>
+        <Text style={styles.warningText}>
+          ⚠️ Autorizo a CAIXA a debitar o valor da tarifa vigente de TED na data
+          agendada.
+        </Text>
+      </View>
+
+      <Text style={styles.passwordLabel}>Senha da transação</Text>
+      <TextInput
+        secureTextEntry
+        style={styles.passwordInput}
+        value={password}
+        onChangeText={setPassword}
+        placeholder="Digite sua senha"
+      />
+
+      <TouchableOpacity style={styles.confirmButton} onPress={handleConfirm}>
+        <Text style={styles.confirmText}>Confirmar</Text>
       </TouchableOpacity>
+
       <TouchableOpacity onPress={onBack}>
-        <Text style={styles.cancelText}>Voltar</Text>
+        <Text style={styles.cancelText}>Cancelar</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 };
 
+const InfoItem = ({ label, value }: { label: string; value: string }) => (
+  <>
+    <Text style={styles.label}>{label}</Text>
+    <Text style={styles.value}>{value}</Text>
+  </>
+);
+
 const styles = StyleSheet.create({
-  container: { padding: 20 },
-  title: { fontSize: 18, fontWeight: 'bold', color: '#0039A6', marginBottom: 12 },
-  box: { backgroundColor: '#F5F5F5', padding: 16, borderRadius: 6, marginVertical: 12 },
-  input: { borderWidth: 1, borderColor: '#ccc', padding: 10, borderRadius: 6 },
-  continueButton: { backgroundColor: '#FF7A00', padding: 14, borderRadius: 6, alignItems: 'center', marginTop: 16 },
-  buttonText: { color: 'white', fontWeight: 'bold' },
-  cancelText: { textAlign: 'center', color: '#FF7A00', marginTop: 10 },
+  container: {
+    paddingBottom: 40,
+    backgroundColor: "#fff",
+  },
+  header: {
+    backgroundColor: "#0039A6",
+    padding: 16,
+    width: "100%",
+  },
+  headerText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 18,
+  },
+  infoText: {
+    color: "#0039A6",
+    fontWeight: "bold",
+    fontSize: 16,
+    marginVertical: 20,
+    paddingHorizontal: 20,
+  },
+  dataBox: {
+    backgroundColor: "#F2F2F2",
+    padding: 20,
+    marginBottom: 20,
+    width: "100%",
+  },
+  label: {
+    color: "#555",
+    fontSize: 15,
+    marginTop: 16,
+  },
+  value: {
+    fontWeight: "bold",
+    fontSize: 17,
+    color: "#000",
+    marginTop: 4,
+  },
+  warningBox: {
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
+  warningText: {
+    color: "#444",
+    fontSize: 14,
+  },
+  passwordLabel: {
+    color: "#0039A6",
+    fontWeight: "bold",
+    fontSize: 16,
+    marginBottom: 10,
+    paddingHorizontal: 20,
+  },
+  passwordInput: {
+    backgroundColor: "#F2F2F2",
+    height: 50,
+    marginHorizontal: 20,
+    borderRadius: 6,
+    paddingHorizontal: 16,
+    marginBottom: 24,
+  },
+  confirmButton: {
+    backgroundColor: "#F39200",
+    padding: 16,
+    borderRadius: 6,
+    alignItems: "center",
+    marginHorizontal: 20,
+  },
+  confirmText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  cancelText: {
+    color: "#F39200",
+    textAlign: "center",
+    marginTop: 16,
+    fontWeight: "bold",
+    fontSize: 16,
+  },
 });
 
 export default TEDConfirmation;
