@@ -107,6 +107,19 @@ const styles = StyleSheet.create({
   headerButtonText: {
     fontSize: 16,
   },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 8, 
+  },
+
+  smallInput: {
+    flex: 1,
+  },
+
+  mediumInput: {
+    flex: 2,
+  },
 });
 
 export default styles;

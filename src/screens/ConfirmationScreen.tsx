@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useState } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { Button } from "react-native-paper";
 import { useAccessibility } from "../context/AccessibilityContext";
@@ -27,8 +27,12 @@ const ConfirmationScreen = () => {
   const { settings, colors } = useAccessibility();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const route = useRoute();
-  const transferData = (route.params as { transferData: TransferData })
-    .transferData;
+  const { transferData, clickCount, executionTime } = route.params as {
+    transferData: TransferData;
+    clickCount: number;
+    executionTime: number;
+  };
+  const confirmationStartTime = useRef<number>(Date.now());
 
   const getTransferTypeText = () => {
     switch (transferData.transferType) {
@@ -72,7 +76,22 @@ const ConfirmationScreen = () => {
   };
 
   const handleConfirm = () => {
-    navigation.navigate("Success");
+    const confirmationEndTime = Date.now();
+
+    const confirmationDuration =
+      (confirmationEndTime - confirmationStartTime.current) / 1000;
+    const totalExecutionTime = executionTime + confirmationDuration;
+
+    console.log("Enviando para SuccessScreen:", {
+      clickCount,
+      executionTime: totalExecutionTime,
+    });
+
+    navigation.navigate("Success", {
+      transferData,
+      clickCount,
+      executionTime: totalExecutionTime,
+    });
   };
 
   const formatCurrency = (value: string) => {

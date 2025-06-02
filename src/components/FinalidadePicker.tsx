@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { useAccessibility } from '../context/AccessibilityContext';
 
@@ -7,9 +7,10 @@ type FinalidadePickerProps = {
   value: string;
   onChange: (value: string) => void;
   error?: boolean;
+  onOpen?: () => void;
 };
 
-const FinalidadePicker: React.FC<FinalidadePickerProps> = ({ value, onChange, error }) => {
+const FinalidadePicker: React.FC<FinalidadePickerProps> = ({ value, onChange, error, onOpen }) => {
   const { settings, colors } = useAccessibility();
 
   const finalidades = [
@@ -24,31 +25,30 @@ const FinalidadePicker: React.FC<FinalidadePickerProps> = ({ value, onChange, er
 
   return (
     <View style={styles.container}>
-      <Text style={[
-        styles.label,
-        { 
-          fontSize: settings.fontSize,
-          color: colors.text
-        }
-      ]}>
+      <Text
+        style={[
+          styles.label,
+          { fontSize: settings.fontSize, color: colors.text },
+        ]}
+      >
         Finalidade da transferência*
       </Text>
-      <View style={[
-        styles.pickerContainer,
-        {
-          borderColor: error ? colors.error : colors.border,
-          backgroundColor: colors.cardBackground
-        }
-      ]}>
+      <Pressable
+        onPress={() => {
+          if (onOpen) onOpen();
+        }}
+        style={[
+          styles.pickerContainer,
+          {
+            borderColor: error ? colors.error : colors.border,
+            backgroundColor: colors.cardBackground,
+          },
+        ]}
+      >
         <Picker
           selectedValue={value}
           onValueChange={onChange}
-          style={[
-            styles.picker,
-            {
-              color: colors.text,
-            }
-          ]}
+          style={[styles.picker, { color: colors.text }]}
           dropdownIconColor={colors.text}
           accessibilityLabel="Seletor de finalidade da transferência"
         >
@@ -61,27 +61,16 @@ const FinalidadePicker: React.FC<FinalidadePickerProps> = ({ value, onChange, er
             />
           ))}
         </Picker>
-      </View>
+      </Pressable>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    marginBottom: 16,
-  },
-  label: {
-    marginBottom: 8,
-    fontWeight: 'bold',
-  },
-  pickerContainer: {
-    borderWidth: 1,
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  picker: {
-    height: 50,
-  },
+  container: { marginBottom: 16 },
+  label: { marginBottom: 8, fontWeight: 'bold' },
+  pickerContainer: { borderWidth: 1, borderRadius: 4, overflow: 'hidden' },
+  picker: { height: 50 },
 });
 
 export default FinalidadePicker;

@@ -6,6 +6,8 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  TouchableWithoutFeedback,
+  Pressable,
 } from "react-native";
 import { Button, HelperText } from "react-native-paper";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
@@ -52,7 +54,22 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const startTimeRef = useRef(Date.now());
   const [clickCount, setClickCount] = useState(0);
-  const { incrementClickCount } = useAccessibility();
+  const [executionTime, setExecutionTime] = useState(0);
+  const [agency, setAgency] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [digit, setDigit] = useState("");
+
+  const handlePress = () => {
+    setClickCount((prev) => {
+      const newCount = prev + 1;
+      console.log("Clique registrado. Total:", newCount);
+      return newCount;
+    });
+  };
+
+  const handleFullAccount = () => {
+    return `${agency}-${accountNumber}-${digit}`;
+  };
 
   useEffect(() => {
     (async () => {
@@ -65,20 +82,30 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
     navigation.setOptions({
       headerRight: () => (
         <View style={styles.headerButtonsContainer}>
-          <Button
-            onPress={() => navigation.navigate("AcessibilidadeHelp")}
-            style={styles.helpHeaderButton}
-            labelStyle={[styles.headerButtonText, { color: colors.primary }]}
-          >
-            <Icon name="help-circle" size={24} color={colors.primary} />
-          </Button>
-          <Button
-            onPress={() => navigation.navigate("Acessibilidade")}
-            style={styles.settingsHeaderButton}
-            labelStyle={[styles.headerButtonText, { color: colors.primary }]}
-          >
-            <Icon name="cog" size={24} color={colors.primary} />
-          </Button>
+          <TouchableWithoutFeedback onPress={handlePress}>
+            <Button
+              onPress={() => {
+                handlePress();
+                navigation.navigate("AcessibilidadeHelp");
+              }}
+              style={styles.helpHeaderButton}
+              labelStyle={[styles.headerButtonText, { color: colors.primary }]}
+            >
+              <Icon name="help-circle" size={24} color={colors.primary} />
+            </Button>
+          </TouchableWithoutFeedback>
+          <TouchableWithoutFeedback onPress={handlePress}>
+            <Button
+              onPress={() => {
+                handlePress();
+                navigation.navigate("Acessibilidade");
+              }}
+              style={styles.settingsHeaderButton}
+              labelStyle={[styles.headerButtonText, { color: colors.primary }]}
+            >
+              <Icon name="cog" size={24} color={colors.primary} />
+            </Button>
+          </TouchableWithoutFeedback>
         </View>
       ),
     });
@@ -119,11 +146,19 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
   };
 
   const handleTransfer = async () => {
-    incrementClickCount();
+    handlePress();
 
     if (validateForm()) {
-      const numericValue = parseCurrency(value);
+      const endTime = Date.now();
+      const executionTimeInSeconds = (endTime - startTimeRef.current) / 1000;
+      setExecutionTime(executionTimeInSeconds);
 
+      console.log("Dados a serem enviados:", {
+        clickCount: clickCount + 1,
+        executionTime: executionTimeInSeconds,
+      });
+
+      const numericValue = parseCurrency(value);
       const transferData = {
         transferType,
         bank,
@@ -141,12 +176,11 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
         historico,
       };
 
-      navigation.navigate("Confirmation", { transferData });
-
-      const endTime = Date.now();
-      const executionTimeInSeconds = (endTime - startTimeRef.current) / 1000;
-
-      await saveLog(clickCount + 1, executionTimeInSeconds);
+      navigation.navigate("Confirmation", {
+        transferData,
+        clickCount: clickCount + 1,
+        executionTime: executionTimeInSeconds,
+      });
     }
   };
 
@@ -217,7 +251,10 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
 
         <TransferTypeSelector
           value={transferType}
-          onChange={setTransferType}
+          onChange={(value) => {
+            handlePress();
+            setTransferType(value);
+          }}
           colors={{
             cardBackground: colors.cardBackground,
             text: colors.text,
@@ -263,6 +300,7 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
                 onSelectBank={(codigo: string, nomeCompleto: string) => {
                   setBank(codigo);
                   setQuery(nomeCompleto);
+                  handlePress();
                 }}
                 error={errors.bank}
               />
@@ -291,6 +329,7 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
                   placeholderTextColor={colors.placeholder}
                   value={identificacaoDeposito}
                   onChangeText={setIdentificacaoDeposito}
+                  onFocus={handlePress}
                 />
                 <HelperText
                   type="error"
@@ -338,6 +377,7 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
                 onSelectBank={(codigo: string, nomeCompleto: string) => {
                   setBank(codigo);
                   setQuery(nomeCompleto);
+                  handlePress();
                 }}
                 error={errors.bank}
               />
@@ -354,17 +394,22 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
                 Tipo de conta a ser creditada*
               </Text>
 
-              <AccountTypePicker
-                value={tipoConta}
-                onChange={setTipoConta}
-                colors={{
-                  cardBackground: colors.cardBackground,
-                  text: colors.text,
-                  border: colors.border,
-                  placeholder: colors.placeholder,
-                }}
-                error={errors.tipoConta}
-              />
+              <TouchableWithoutFeedback onPress={handlePress}>
+                <AccountTypePicker
+                  value={tipoConta}
+                  onChange={(value) => {
+                    setTipoConta(value);
+                    handlePress();
+                  }}
+                  colors={{
+                    cardBackground: colors.cardBackground,
+                    text: colors.text,
+                    border: colors.border,
+                    placeholder: colors.placeholder,
+                  }}
+                  error={errors.tipoConta}
+                />
+              </TouchableWithoutFeedback>
 
               <View style={styles.inputContainer}>
                 <Text
@@ -387,6 +432,7 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
                   ]}
                   value="Kaue Medeiros Fulgencio"
                   editable={false}
+                  onFocus={handlePress}
                 />
               </View>
 
@@ -411,6 +457,7 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
                   ]}
                   value="494.827.158-61"
                   editable={false}
+                  onFocus={handlePress}
                 />
               </View>
 
@@ -423,34 +470,65 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
                 >
                   Agência - Conta - DV*
                 </Text>
-                <TextInput
-                  style={[
-                    styles.input,
-                    errors.account && styles.inputError,
-                    {
-                      fontSize: settings.fontSize,
-                      backgroundColor: colors.cardBackground,
-                      borderColor: colors.border,
-                      color: colors.text,
-                    },
-                  ]}
-                  placeholder="0000-000000-0"
-                  placeholderTextColor={colors.placeholder}
-                  value={account}
-                  onChangeText={(text) => {
-                    const formatted = formatAccountInput(text);
-                    setAccount(formatted);
-                  }}
-                  keyboardType="numeric"
-                  maxLength={13}
-                />
-                <HelperText
-                  type="error"
-                  visible={errors.account}
-                  style={{ color: colors.error }}
-                >
-                  Conta é obrigatória
-                </HelperText>
+                <View style={styles.row}>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      styles.smallInput,
+                      {
+                        fontSize: settings.fontSize,
+                        backgroundColor: colors.cardBackground,
+                        borderColor: colors.border,
+                        color: colors.text,
+                      },
+                    ]}
+                    placeholder="Agência"
+                    placeholderTextColor={colors.placeholder}
+                    value={agency}
+                    onChangeText={setAgency}
+                    keyboardType="numeric"
+                    maxLength={4}
+                    onFocus={handlePress}
+                  />
+                  <TextInput
+                    style={[
+                      styles.input,
+                      styles.mediumInput,
+                      {
+                        fontSize: settings.fontSize,
+                        backgroundColor: colors.cardBackground,
+                        borderColor: colors.border,
+                        color: colors.text,
+                      },
+                    ]}
+                    placeholder="Conta"
+                    placeholderTextColor={colors.placeholder}
+                    value={accountNumber}
+                    onChangeText={setAccountNumber}
+                    keyboardType="numeric"
+                    maxLength={6}
+                    onFocus={handlePress}
+                  />
+                  <TextInput
+                    style={[
+                      styles.input,
+                      styles.smallInput,
+                      {
+                        fontSize: settings.fontSize,
+                        backgroundColor: colors.cardBackground,
+                        borderColor: colors.border,
+                        color: colors.text,
+                      },
+                    ]}
+                    placeholder="DV"
+                    placeholderTextColor={colors.placeholder}
+                    value={digit}
+                    onChangeText={setDigit}
+                    keyboardType="numeric"
+                    maxLength={1}
+                    onFocus={handlePress}
+                  />
+                </View>
               </View>
 
               <View style={styles.inputContainer}>
@@ -476,6 +554,7 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
                   placeholderTextColor={colors.placeholder}
                   value={identificacaoDeposito}
                   onChangeText={setIdentificacaoDeposito}
+                  onFocus={handlePress}
                 />
               </View>
 
@@ -503,6 +582,7 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
                   placeholderTextColor={colors.placeholder}
                   value={historico}
                   onChangeText={setHistorico}
+                  onFocus={handlePress}
                   multiline
                 />
                 <HelperText
@@ -551,6 +631,7 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
                 onSelectBank={(codigo: string, nomeCompleto: string) => {
                   setBank(codigo);
                   setQuery(nomeCompleto);
+                  handlePress();
                 }}
                 error={errors.bank}
               />
@@ -567,17 +648,22 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
                 Tipo de conta a ser creditada*
               </Text>
 
-              <AccountTypePicker
-                value={tipoConta}
-                onChange={setTipoConta}
-                colors={{
-                  cardBackground: colors.cardBackground,
-                  text: colors.text,
-                  border: colors.border,
-                  placeholder: colors.placeholder,
-                }}
-                error={errors.tipoConta}
-              />
+              <TouchableWithoutFeedback onPress={handlePress}>
+                <AccountTypePicker
+                  value={tipoConta}
+                  onChange={(value) => {
+                    setTipoConta(value);
+                    handlePress(); // ✅ executa quando muda o valor
+                  }}
+                  colors={{
+                    cardBackground: colors.cardBackground,
+                    text: colors.text,
+                    border: colors.border,
+                    placeholder: colors.placeholder,
+                  }}
+                  error={errors.tipoConta}
+                />
+              </TouchableWithoutFeedback>
 
               <View style={styles.inputContainer}>
                 <Text
@@ -604,7 +690,9 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
                   value={nome}
                   onChangeText={setNome}
                   keyboardType="default"
+                  onFocus={handlePress}
                 />
+
                 <HelperText
                   type="error"
                   visible={errors.account}
@@ -639,7 +727,9 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
                   value={account}
                   onChangeText={setAccount}
                   keyboardType="numeric"
+                  onFocus={handlePress}
                 />
+
                 <HelperText
                   type="error"
                   visible={errors.account}
@@ -660,19 +750,22 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
                     >
                       Nome do destinatário*
                     </Text>
-                    <TextInput
-                      style={[
-                        styles.input,
-                        {
-                          fontSize: settings.fontSize,
-                          backgroundColor: colors.cardBackground,
-                          borderColor: colors.border,
-                          color: colors.text,
-                        },
-                      ]}
-                      placeholder="Digite o nome do destinatário"
-                      placeholderTextColor={colors.placeholder}
-                    />
+                    <TouchableWithoutFeedback onPress={handlePress}>
+                      <TextInput
+                        style={[
+                          styles.input,
+                          {
+                            fontSize: settings.fontSize,
+                            backgroundColor: colors.cardBackground,
+                            borderColor: colors.border,
+                            color: colors.text,
+                          },
+                        ]}
+                        placeholder="Digite o nome do destinatário"
+                        placeholderTextColor={colors.placeholder}
+                        onFocus={handlePress}
+                      />
+                    </TouchableWithoutFeedback>
                   </View>
                   <View style={styles.inputContainer}>
                     <Text
@@ -683,30 +776,35 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
                     >
                       CPF do destinatário*
                     </Text>
-                    <TextInput
-                      style={[
-                        styles.input,
-                        {
-                          fontSize: settings.fontSize,
-                          backgroundColor: colors.cardBackground,
-                          borderColor: colors.border,
-                          color: colors.text,
-                        },
-                      ]}
-                      placeholder="000.000.000-00"
-                      placeholderTextColor={colors.placeholder}
-                      keyboardType="numeric"
-                    />
+                    <TouchableWithoutFeedback onPress={handlePress}>
+                      <TextInput
+                        style={[
+                          styles.input,
+                          {
+                            fontSize: settings.fontSize,
+                            backgroundColor: colors.cardBackground,
+                            borderColor: colors.border,
+                            color: colors.text,
+                          },
+                        ]}
+                        placeholder="000.000.000-00"
+                        placeholderTextColor={colors.placeholder}
+                        keyboardType="numeric"
+                        onFocus={handlePress}
+                      />
+                    </TouchableWithoutFeedback>
                   </View>
                 </>
               )}
             </View>
-
-            <FinalidadePicker
-              value={finalidade}
-              onChange={setFinalidade}
-              error={errors.finalidade}
-            />
+            <Pressable onFocus={handlePress}>
+              <FinalidadePicker
+                value={finalidade}
+                onChange={setFinalidade}
+                error={errors.finalidade}
+                onOpen={handlePress}
+              />
+            </Pressable>
           </>
         )}
 
@@ -731,38 +829,41 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
             >
               Valor (R$)**
             </Text>
-            <TextInput
-              style={[
-                styles.valueInput,
-                errors.value && styles.inputError,
-                {
-                  fontSize: settings.fontSize,
-                  backgroundColor: colors.cardBackground,
-                  borderColor: colors.border,
-                  color: colors.text,
-                },
-              ]}
-              placeholder="0,00"
-              placeholderTextColor={colors.placeholder}
-              value={value}
-              onChangeText={(text) => {
-                if (text === "" || text === "0") {
-                  setValue("0,00");
-                  return;
-                }
+            <TouchableWithoutFeedback onPress={handlePress}>
+              <TextInput
+                style={[
+                  styles.valueInput,
+                  errors.value && styles.inputError,
+                  {
+                    fontSize: settings.fontSize,
+                    backgroundColor: colors.cardBackground,
+                    borderColor: colors.border,
+                    color: colors.text,
+                  },
+                ]}
+                placeholder="0,00"
+                placeholderTextColor={colors.placeholder}
+                value={value}
+                onChangeText={(text) => {
+                  if (text === "" || text === "0") {
+                    setValue("0,00");
+                    return;
+                  }
 
-                const cleanText = text.replace(/[^0-9]/g, "");
+                  const cleanText = text.replace(/[^0-9]/g, "");
 
-                if (cleanText === "") {
-                  setValue("0,00");
-                  return;
-                }
+                  if (cleanText === "") {
+                    setValue("0,00");
+                    return;
+                  }
 
-                const formattedValue = formatCurrencyInput(cleanText);
-                setValue(formattedValue);
-              }}
-              keyboardType="numeric"
-            />
+                  const formattedValue = formatCurrencyInput(cleanText);
+                  setValue(formattedValue);
+                }}
+                keyboardType="numeric"
+                onFocus={handlePress}
+              />
+            </TouchableWithoutFeedback>
             <HelperText
               type="error"
               visible={errors.value}
@@ -773,27 +874,32 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
           </View>
         </View>
 
-        <TransferOptionsWithDate
-          selectedDate={selectedDate}
-          onDateChange={setSelectedDate}
-        />
+        <TouchableWithoutFeedback onPress={handlePress}>
+          <TransferOptionsWithDate
+            selectedDate={selectedDate}
+            onDateChange={setSelectedDate}
+            onClick={handlePress}
+          />
+        </TouchableWithoutFeedback>
 
         <WarningBox />
 
-        <Button
-          mode="contained"
-          onPress={handleTransfer}
-          style={[styles.button, { backgroundColor: colors.primary }]}
-          labelStyle={[
-            styles.buttonLabel,
-            {
-              fontSize: settings.fontSize,
-              color: settings.highContrast ? "#000" : "#FFF",
-            },
-          ]}
-        >
-          Transferir
-        </Button>
+        <TouchableWithoutFeedback onPress={handlePress}>
+          <Button
+            mode="contained"
+            onPress={handleTransfer}
+            style={[styles.button, { backgroundColor: colors.primary }]}
+            labelStyle={[
+              styles.buttonLabel,
+              {
+                fontSize: settings.fontSize,
+                color: settings.highContrast ? "#000" : "#FFF",
+              },
+            ]}
+          >
+            Transferir
+          </Button>
+        </TouchableWithoutFeedback>
       </ScrollView>
     </KeyboardAvoidingView>
   );

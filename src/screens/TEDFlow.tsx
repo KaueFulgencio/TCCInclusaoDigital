@@ -49,7 +49,7 @@ const uploadAnalyticsToFirebase = async (
       timestamp: serverTimestamp(),
     };
 
-    await addDoc(collection(db, "analytics"), dataToSend);
+    await addDoc(collection(db, "dados app caixa - ted"), dataToSend);
     console.log("Analytics enviados para o Firebase com sucesso!");
     return true;
   } catch (error) {

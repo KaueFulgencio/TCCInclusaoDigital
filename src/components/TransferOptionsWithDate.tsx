@@ -15,6 +15,7 @@ const formatDate = (date: Date) => {
 type TransferOptionsWithDateProps = {
   selectedDate: Date;
   onDateChange: (date: Date) => void;
+  onClick?: () => void;
 };
 
 type Option = "now" | "today" | "custom";
@@ -22,6 +23,7 @@ type Option = "now" | "today" | "custom";
 const TransferOptionsWithDate: React.FC<TransferOptionsWithDateProps> = ({
   selectedDate,
   onDateChange,
+  onClick,
 }) => {
   const { settings } = useAccessibility();
   const [open, setOpen] = useState(false);
@@ -44,6 +46,7 @@ const TransferOptionsWithDate: React.FC<TransferOptionsWithDateProps> = ({
   const colors = getThemeColors();
 
   const onSelectOption = (option: Option) => {
+    if (onClick) onClick();
     setSelectedOption(option);
     if (option === "now") {
       onDateChange(new Date());
