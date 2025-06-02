@@ -81,10 +81,64 @@ const TEDForm = ({
     </TouchableOpacity>
   );
 
+  const validateForm = () => {
+    const requiredFields = [
+      "bank",
+      "accountType",
+      "agency",
+      "account",
+      "digit",
+      "name",
+      "cpf",
+      "value",
+      "purpose",
+    ];
+
+    for (const field of requiredFields) {
+      if (!form[field]) {
+        alert(`O campo ${field} é obrigatório`);
+        return false;
+      }
+    }
+
+    // Validação de CPF simples (exemplo, pode melhorar)
+    if (form.cpf.length < 11) {
+      alert("CPF inválido");
+      return false;
+    }
+
+    // Validação de valor
+    if (isNaN(Number(form.value)) || Number(form.value) <= 0) {
+      alert("Informe um valor válido para a transferência");
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSubmit = () => {
+    if (validateForm()) {
+      onSubmit(form);
+    }
+  };
+
+  const getHeaderTitle = () => {
+    switch (type) {
+      case "same":
+        return "TED mesma titularidade";
+      case "third":
+        return "TED para terceiros";
+      case "judicial":
+        return "TED Depósito Judicial";
+      default:
+        return "TED";
+    }
+  };
+
   return (
     <>
       <View style={styles.headerBlue}>
-        <Text style={styles.headerBlueText}>TED para terceiros</Text>
+        <Text style={styles.headerBlueText}>{getHeaderTitle()}</Text>
       </View>
 
       <ScrollView
@@ -244,12 +298,10 @@ const TEDForm = ({
           </Text>
         </View>
 
-        <TouchableOpacity
-          style={styles.continueButton}
-          onPress={() => onSubmit(form)}
-        >
+        <TouchableOpacity style={styles.continueButton} onPress={handleSubmit}>
           <Text style={styles.buttonText}>Continuar</Text>
         </TouchableOpacity>
+
         <TouchableOpacity style={styles.cancelButton} onPress={onCancel}>
           <Text style={styles.cancelText}>Cancelar</Text>
         </TouchableOpacity>

@@ -31,9 +31,11 @@ const TEDFlow = () => {
     case 'form':
       return <TEDForm type={transferType!} onSubmit={handleFormSubmit} onCancel={() => setStep('select')} />;
     case 'confirm':
-      return <TEDConfirmation data={formData} onBack={() => setStep('form')} onConfirm={handleConfirm} />;
+      return <TEDConfirmation data={formData} onBack={() => setStep('form')} onConfirm={handleConfirm} type={'same'} />;
     case 'success':
-      return <TEDSuccess data={formData} />;
+      return <TEDSuccess data={formData} onContinue={function (): void {
+        throw new Error('Function not implemented.');
+      } } />;
     default:
       return null;
   }
