@@ -168,7 +168,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         Enviar PIX
       </Button>
 
-      <Button
+      {/* <Button
         mode="contained"
         onPress={handleSaveUser}
         style={dynamicStyles.button}
@@ -181,9 +181,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           style={dynamicStyles.icon}
         />
         Salvar Usuário Teste
-      </Button>
+      </Button> */}
 
-      <Button
+      {/* <Button
         mode="contained"
         onPress={handleSaveTestTransaction}
         style={dynamicStyles.button}
@@ -196,9 +196,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           style={dynamicStyles.icon}
         />
         Salvar Transação Teste
-      </Button>
+      </Button> */}
 
-      <Button
+      {/* <Button
         mode="contained"
         onPress={handleUploadAnalytics}
         style={dynamicStyles.button}
@@ -211,9 +211,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           style={dynamicStyles.icon}
         />
         Enviar Analytics
-      </Button>
+      </Button> */}
 
-      <Button
+      {/* <Button
         mode="contained"
         onPress={() => navigation.navigate("History")}
         style={dynamicStyles.button}
@@ -226,7 +226,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           style={dynamicStyles.icon}
         />
         Histórico de Transações
-      </Button>
+      </Button> */}
 
       <Button
         mode="contained"
@@ -241,6 +241,21 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           style={dynamicStyles.icon}
         />
         Fluxo de TED CAIXA
+      </Button>
+
+      <Button
+      mode="contained"
+      onPress={() => navigation.navigate("PixCaixaHomeScreen")}
+      style={dynamicStyles.button}
+      labelStyle={dynamicStyles.buttonText}
+      contentStyle={dynamicStyles.buttonContent}
+      >
+        <Icon
+          name="cash-fast"
+          size={24 + (zoomEnabled ? 6 : 0)}
+          style={dynamicStyles.icon}
+          />
+          PIX APLICATIVO CAIXA
       </Button>
 
       <View style={dynamicStyles.analyticsContainer}>

@@ -86,14 +86,22 @@ const PixScreen: React.FC<PixScreenProps> = ({ navigation }) => {
     );
   }, []);
 
-  const uploadAnalyticsToFirebase = async (executionTime: number) => {
+  const uploadAnalyticsToFirebase = async (clickCount: number, executionTime: number) => {
+    function formatDuration(seconds: number): string {
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      const millis = Math.floor((seconds - Math.floor(seconds)) * 1000);
+
+      return `${mins} min ${secs} s`;
+    }
+
     try {
       const dataToSend = {
         clickCount,
         executionTime,
         currentTime: new Date().toLocaleString("pt-BR"),
         timestamp: serverTimestamp(),
-        screen: "PixScreen",
+        executionTimeFormatted: formatDuration(executionTime),
       };
 
       await addDoc(collection(db, "pix_analytics"), dataToSend);
@@ -112,10 +120,12 @@ const PixScreen: React.FC<PixScreenProps> = ({ navigation }) => {
       setStep(step + 1);
     } else {
       try {
+        const newClickCount = clickCount + 1;
+
         const endTime = Date.now();
         const executionTime = (endTime - startTimeRef.current) / 1000;
 
-        const success = await uploadAnalyticsToFirebase(executionTime);
+        const success = await uploadAnalyticsToFirebase(newClickCount, executionTime);
 
         const transferData = {
           transferType: "Pix",
@@ -128,7 +138,7 @@ const PixScreen: React.FC<PixScreenProps> = ({ navigation }) => {
         if (success) {
           navigation.navigate("Success", {
             transferData,
-            clickCount,
+            clickCount: newClickCount,
             executionTime,
           });
         } else {

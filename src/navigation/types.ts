@@ -36,12 +36,30 @@ export type RootStackParamList = {
   History: undefined;
   TEDFlow: undefined;
   SuccessCAIXA: undefined;
+  PixCaixaHomeScreen: undefined;
+  PixCaixaConfirmRecipientScreen: {
+    clickCount: number;
+    executionTime: number;
+  };
+  PixCaixaConfirmationScreen: {
+    clickCount: number;
+    executionTime: number;
+  }
+  PixCaixaPasswordScreen: {
+    clickCount: number;
+    executionTime: number;
+  }
+  PixCaixaConfirmDataScreen: {
+    clickCount: number;
+    executionTime: number;
+  }
 };
 
 export type HomeScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
   "Home"
 >;
+
 export type AcessibilidadeScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
   "Acessibilidade"
@@ -82,6 +100,27 @@ export type SuccessScreenCAIXANavigationProp = StackNavigationProp<
   RootStackParamList,
   "SuccessCAIXA"
 >;
+export type PixCaixaHomeScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "PixCaixaHomeScreen"
+  >;
+export type PixCaixaConfirmRecipientScreenRouteProp = RouteProp<
+  RootStackParamList,
+  "PixCaixaConfirmRecipientScreen"
+  >;
+export type PixCaixaConfirmationScreenRouteProp = RouteProp<
+  RootStackParamList,
+  "PixCaixaConfirmationScreen"
+  >;
+export type PixCaixaPasswordScreenRouteProp = RouteProp<
+  RootStackParamList,
+  "PixCaixaPasswordScreen"
+  >;
+export type PixCaixaConfirmDataScreenRouteProp = RouteProp<
+  RootStackParamList,
+  "PixCaixaConfirmDataScreen"
+  >;
+
 
 export type HomeScreenRouteProp = RouteProp<RootStackParamList, "Home">;
 export type AcessibilidadeScreenRouteProp = RouteProp<

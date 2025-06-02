@@ -12,6 +12,10 @@ import PixScreen from "../screens/PixScreen";
 import HistoryScreen from "../screens/HistoryScreen";
 import {AppTracker} from "../../AppTracker";
 import TEDFlow from "../screens/TEDFlow";
+import { PixCaixaHomeScreen } from "../screens/PIX/PixCaixaHomeScreen";
+import { PixCaixaConfirmRecipientScreen } from "../screens/PIX/PixCaixaConfirmRecipientScreen";
+import { PixCaixaPasswordScreen } from "../screens/PIX/PixCaixaPasswordScreen";
+import { PixCaixaConfirmDataScreen } from "../screens/PIX/PixCaixaConfirmDataScreen";
 
 const Stack = createStackNavigator();
 
@@ -49,6 +53,31 @@ function NavigatorWithAccessibility() {
       <Stack.Screen name="Pix" component={PixScreen} options={{ title: 'Enviar PIX' }} />
       <Stack.Screen name="History" component={HistoryScreen} options={{ title: 'Histórico' }} />
       <Stack.Screen name="TEDFlow" component={TEDFlow} options={{ title: 'Transferência TED CAIXA' }} />
+      <Stack.Screen
+        name="PixCaixaHomeScreen"
+        component={PixCaixaHomeScreen}
+        options={{ title: 'Pagar via Pix' }}
+        />
+      <Stack.Screen
+      name="PixCaixaConfirmRecipientScreen"
+      component={PixCaixaConfirmRecipientScreen}
+      options={{ title: 'Confirmar destinatário' }}
+      />
+      <Stack.Screen
+      name="PixCaixaConfirmDataScreen"
+      component={PixCaixaConfirmDataScreen}
+      options={{ title: 'Confirmar pagamento' }}
+      />
+      <Stack.Screen
+      name="PixCaixaConfirmationScreen"
+      component={PixCaixaConfirmDataScreen}
+      options={{ title: 'Confirmar pagamento' }}
+      />
+      <Stack.Screen
+        name="PixCaixaPasswordScreen"
+        component={PixCaixaPasswordScreen}
+        options={{ title: 'Senha' }}
+        />
       
     </Stack.Navigator>
   );

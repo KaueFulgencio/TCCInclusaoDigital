@@ -3,9 +3,13 @@ import { LogBox } from 'react-native';
 
 import App from './App';
 
-LogBox.ignoreLogs([
-  'Warning: Maximum update depth exceeded',
-]);
+LogBox.ignoreAllLogs(true);
+
+if (!__DEV__) {
+  console.log = () => {};
+  console.warn = () => {};
+  console.error = () => {};
+}
 
 // registerRootComponent calls AppRegistry.registerComponent('main', () => App);
 // It also ensures that whether you load the app in Expo Go or in a native build,
