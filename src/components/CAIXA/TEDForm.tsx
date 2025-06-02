@@ -45,12 +45,18 @@ const TEDForm = ({
 
   const [form, setForm] = useState(initialData);
   const [dropdownVisible, setDropdownVisible] = useState<
-    "personType" | "purpose" | null
+    "accountType" | "personType" | "purpose" | null
   >(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const update = (field: string, value: string) =>
+  const update = (field: string, value: string) => {
     setForm({ ...form, [field]: value });
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: "" }));
+    }
+  };
 
+  const accountTypes = ["Conta Corrente", "Conta Poupança", "Conta Salário"];
   const personTypes = ["01 - Pessoa Física", "02 - Pessoa Jurídica"];
   const purposes = [
     "01 - Pagamento",
@@ -69,7 +75,9 @@ const TEDForm = ({
     <TouchableOpacity
       style={styles.dropdownItem}
       onPress={() => {
-        if (dropdownVisible === "personType") {
+        if (dropdownVisible === "accountType") {
+          update("accountType", item);
+        } else if (dropdownVisible === "personType") {
           update("personType", item);
         } else if (dropdownVisible === "purpose") {
           update("purpose", item);
@@ -82,56 +90,51 @@ const TEDForm = ({
   );
 
   const validateForm = () => {
-    const requiredFields = [
-      "bank",
-      "accountType",
-      "agency",
-      "account",
-      "digit",
-      "name",
-      "cpf",
-      "value",
-      "purpose",
-    ];
+    const newErrors: Record<string, string> = {};
+    const requiredFields = ["bank", "value"];
 
-    for (const field of requiredFields) {
-      if (!form[field]) {
-        alert(`O campo ${field} é obrigatório`);
-        return false;
+    if (type === "judicial") {
+      requiredFields.push("judicialId");
+    } else {
+      requiredFields.push("accountType", "agency", "account", "digit", "purpose", "transferId", "history");
+      if (type === "third") {
+        requiredFields.push("name", "cpf", "personType");
       }
     }
 
-    // Validação de CPF simples (exemplo, pode melhorar)
-    if (form.cpf.length < 11) {
-      alert("CPF inválido");
-      return false;
+    for (const field of requiredFields) {
+      if (!form[field]) {
+        newErrors[field] = "Campo obrigatório";
+      }
     }
 
-    // Validação de valor
-    if (isNaN(Number(form.value)) || Number(form.value) <= 0) {
-      alert("Informe um valor válido para a transferência");
-      return false;
+    if (form.value && (isNaN(Number(form.value)) || Number(form.value) <= 0)) {
+      newErrors.value = "Valor inválido";
     }
 
-    return true;
+    if (type !== "same" && form.cpf && form.cpf.length < 11) {
+      newErrors.cpf = "CPF/CNPJ inválido";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = () => {
     if (validateForm()) {
-      onSubmit(form);
+      onSubmit({
+        ...form,
+        depositId: form.judicialId
+      });
     }
   };
 
   const getHeaderTitle = () => {
     switch (type) {
-      case "same":
-        return "TED mesma titularidade";
-      case "third":
-        return "TED para terceiros";
-      case "judicial":
-        return "TED Depósito Judicial";
-      default:
-        return "TED";
+      case "same": return "TED mesma titularidade";
+      case "third": return "TED para terceiros";
+      case "judicial": return "TED Depósito Judicial";
+      default: return "TED";
     }
   };
 
@@ -146,126 +149,161 @@ const TEDForm = ({
         contentContainerStyle={{ paddingBottom: 40 }}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.title}>Dados da conta destino</Text>
+        <Text style={styles.title}>
+          {type === "judicial" ? "Dados do Depósito Judicial" : "Dados da conta destino"}
+        </Text>
         <View style={styles.titleUnderline} />
 
         <Text style={styles.label}>Banco*</Text>
         <TextInput
-          style={styles.underlineInput}
+          style={[styles.underlineInput, errors.bank && styles.errorInput]}
           value={form.bank}
           onChangeText={(v) => update("bank", v)}
         />
+        {errors.bank && <Text style={styles.errorText}>{errors.bank}</Text>}
 
-        <Text style={styles.label}>Tipo de conta*</Text>
-        <TextInput
-          style={styles.underlineInput}
-          value={form.accountType}
-          onChangeText={(v) => update("accountType", v)}
-        />
-
-        <Text style={styles.label}>Agência - Conta - Dígito*</Text>
-        <View style={styles.inlineRow}>
-          <TextInput
-            style={[styles.underlineInput, styles.inlineInput]}
-            placeholder="Agência"
-            value={form.agency}
-            onChangeText={(v) => update("agency", v)}
-          />
-          <TextInput
-            style={[styles.underlineInput, styles.inlineInput]}
-            placeholder="Conta"
-            value={form.account}
-            onChangeText={(v) => update("account", v)}
-          />
-          <TextInput
-            style={[styles.underlineInput, styles.inlineInput]}
-            placeholder="DV"
-            value={form.digit}
-            onChangeText={(v) => update("digit", v)}
-          />
-        </View>
-
-        {type === "third" && (
+        {type === "judicial" ? (
           <>
-            <Text style={styles.label}>Tipo de pessoa*</Text>
+            <Text style={styles.label}>Identificação de depósito*</Text>
+            <TextInput
+              style={[styles.underlineInput, errors.judicialId && styles.errorInput]}
+              value={form.judicialId}
+              onChangeText={(v) => update("judicialId", v)}
+            />
+            {errors.judicialId && <Text style={styles.errorText}>{errors.judicialId}</Text>}
+          </>
+        ) : (
+          <>
+            <Text style={styles.label}>Tipo de conta*</Text>
             <TouchableOpacity
-              style={styles.dropdownInput}
-              onPress={() => setDropdownVisible("personType")}
+              style={[styles.dropdownInput, errors.accountType && styles.errorInput]}
+              onPress={() => setDropdownVisible("accountType")}
             >
               <Text
                 style={[
                   styles.dropdownInputText,
-                  form.personType ? styles.selectedText : null,
+                  form.accountType ? styles.selectedText : null,
                 ]}
               >
-                {form.personType}
+                {form.accountType || "Selecione o tipo de conta"}
               </Text>
             </TouchableOpacity>
+            {errors.accountType && <Text style={styles.errorText}>{errors.accountType}</Text>}
 
-            <Text style={styles.label}>Nome*</Text>
-            <TextInput
-              style={styles.underlineInput}
-              value={form.name}
-              onChangeText={(v) => update("name", v)}
-            />
+            <Text style={styles.label}>Agência - Conta - Dígito*</Text>
+            <View style={styles.inlineRow}>
+              <View style={styles.inlineInputContainer}>
+                <TextInput
+                  style={[styles.underlineInput, errors.agency && styles.errorInput]}
+                  placeholder="Agência"
+                  value={form.agency}
+                  onChangeText={(v) => update("agency", v)}
+                />
+                {errors.agency && <Text style={styles.smallErrorText}>{errors.agency}</Text>}
+              </View>
+              <View style={styles.inlineInputContainer}>
+                <TextInput
+                  style={[styles.underlineInput, errors.account && styles.errorInput]}
+                  placeholder="Conta"
+                  value={form.account}
+                  onChangeText={(v) => update("account", v)}
+                />
+                {errors.account && <Text style={styles.smallErrorText}>{errors.account}</Text>}
+              </View>
+              <View style={styles.inlineInputContainer}>
+                <TextInput
+                  style={[styles.underlineInput, errors.digit && styles.errorInput]}
+                  placeholder="DV"
+                  value={form.digit}
+                  onChangeText={(v) => update("digit", v)}
+                />
+                {errors.digit && <Text style={styles.smallErrorText}>{errors.digit}</Text>}
+              </View>
+            </View>
 
-            <Text style={styles.label}>CPF/CNPJ*</Text>
-            <TextInput
-              style={styles.underlineInput}
-              value={form.cpf}
-              onChangeText={(v) => update("cpf", v)}
-            />
-          </>
-        )}
+            {type === "third" && (
+              <>
+                <Text style={styles.label}>Tipo de pessoa*</Text>
+                <TouchableOpacity
+                  style={[styles.dropdownInput, errors.personType && styles.errorInput]}
+                  onPress={() => setDropdownVisible("personType")}
+                >
+                  <Text
+                    style={[
+                      styles.dropdownInputText,
+                      form.personType ? styles.selectedText : null,
+                    ]}
+                  >
+                    {form.personType}
+                  </Text>
+                </TouchableOpacity>
+                {errors.personType && <Text style={styles.errorText}>{errors.personType}</Text>}
 
-        {type === "judicial" && (
-          <>
-            <Text style={styles.label}>Identificação de depósito*</Text>
-            <TextInput
-              style={styles.underlineInput}
-              value={form.judicialId}
-              onChangeText={(v) => update("judicialId", v)}
-            />
+                <Text style={styles.label}>Nome*</Text>
+                <TextInput
+                  style={[styles.underlineInput, errors.name && styles.errorInput]}
+                  value={form.name}
+                  onChangeText={(v) => update("name", v)}
+                />
+                {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
+
+                <Text style={styles.label}>CPF/CNPJ*</Text>
+                <TextInput
+                  style={[styles.underlineInput, errors.cpf && styles.errorInput]}
+                  value={form.cpf}
+                  onChangeText={(v) => update("cpf", v)}
+                />
+                {errors.cpf && <Text style={styles.errorText}>{errors.cpf}</Text>}
+              </>
+            )}
           </>
         )}
 
         <Text style={styles.label}>Valor*</Text>
         <TextInput
-          style={styles.underlineInput}
+          style={[styles.underlineInput, errors.value && styles.errorInput]}
           keyboardType="numeric"
           value={form.value}
           onChangeText={(v) => update("value", v)}
         />
+        {errors.value && <Text style={styles.errorText}>{errors.value}</Text>}
 
-        <Text style={styles.label}>Finalidade*</Text>
-        <TouchableOpacity
-          style={styles.dropdownInput}
-          onPress={() => setDropdownVisible("purpose")}
-        >
-          <Text
-            style={[
-              styles.dropdownInputText,
-              form.purpose ? styles.selectedText : null,
-            ]}
-          >
-            {form.purpose || "Selecione a finalidade"}
-          </Text>
-        </TouchableOpacity>
+        {type !== "judicial" && (
+          <>
+            <Text style={styles.label}>Finalidade*</Text>
+            <TouchableOpacity
+              style={[styles.dropdownInput, errors.purpose && styles.errorInput]}
+              onPress={() => setDropdownVisible("purpose")}
+            >
+              <Text
+                style={[
+                  styles.dropdownInputText,
+                  form.purpose ? styles.selectedText : null,
+                ]}
+              >
+                {form.purpose || "Selecione a finalidade"}
+              </Text>
+            </TouchableOpacity>
+            {errors.purpose && <Text style={styles.errorText}>{errors.purpose}</Text>}
 
-        <Text style={styles.label}>Identificação da transferência*</Text>
-        <TextInput
-          style={styles.underlineInput}
-          value={form.transferId}
-          onChangeText={(v) => update("transferId", v)}
-        />
+            <Text style={styles.label}>Identificação da transferência*</Text>
+            <TextInput
+              style={[styles.underlineInput, errors.transferId && styles.errorInput]}
+              value={form.transferId}
+              onChangeText={(v) => update("transferId", v)}
+            />
+            {errors.transferId && <Text style={styles.errorText}>{errors.transferId}</Text>}
 
-        <Text style={styles.label}>Histórico*</Text>
-        <TextInput
-          style={[styles.underlineInput, { height: 80 }]}
-          multiline
-          value={form.history}
-          onChangeText={(v) => update("history", v)}
-        />
+            <Text style={styles.label}>Histórico*</Text>
+            <TextInput
+              style={[styles.underlineInput, { height: 80 }, errors.history && styles.errorInput]}
+              multiline
+              value={form.history}
+              onChangeText={(v) => update("history", v)}
+            />
+            {errors.history && <Text style={styles.errorText}>{errors.history}</Text>}
+          </>
+        )}
 
         <View style={styles.scheduleBox}>
           <Text style={styles.label}>Agendamento</Text>
@@ -307,7 +345,7 @@ const TEDForm = ({
         </TouchableOpacity>
       </ScrollView>
 
-      {/* Modal dropdown simples */}
+      {/* Modal dropdown */}
       <Modal
         visible={dropdownVisible !== null}
         transparent
@@ -321,7 +359,11 @@ const TEDForm = ({
         >
           <View style={styles.modalContainer}>
             <FlatList
-              data={dropdownVisible === "personType" ? personTypes : purposes}
+              data={
+                dropdownVisible === "accountType" ? accountTypes :
+                dropdownVisible === "personType" ? personTypes : 
+                purposes
+              }
               keyExtractor={(item) => item}
               renderItem={({ item }) => renderDropdownItem(item)}
               showsVerticalScrollIndicator={false}
@@ -369,7 +411,6 @@ const styles = StyleSheet.create({
   option: {
     paddingVertical: 10,
   },
-
   underlineInput: {
     borderBottomWidth: 2,
     borderBottomColor: "#BDBDBD",
@@ -381,7 +422,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 10,
   },
-  inlineInput: {
+  inlineInputContainer: {
     flex: 1,
   },
   dropdownInput: {
@@ -471,7 +512,6 @@ const styles = StyleSheet.create({
   },
   buttonText: { color: "white", fontWeight: "bold" },
   cancelText: { color: "#F39200", fontWeight: "bold" },
-
   modalBackground: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.2)",
@@ -482,6 +522,21 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     borderRadius: 10,
     maxHeight: 250,
+  },
+  errorInput: {
+    borderBottomColor: 'red',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 12,
+    marginTop: -10,
+    marginBottom: 10,
+  },
+  smallErrorText: {
+    color: 'red',
+    fontSize: 10,
+    marginTop: -8,
+    marginBottom: 8,
   },
 });
 

@@ -6,36 +6,21 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Alert,
 } from "react-native";
 
-interface TEDConfirmationProps {
-  data: {
-    originAccount: string;
-    bank: string;
-    accountType: string;
-    agency: string;
-    account: string;
-    digit: string;
-    personType: string;
-    name: string;
-    cpf: string;
-    value: string;
-    purpose: string;
-    history: string;
-  };
-  type: "same" | "third" | "judicial";
-  onBack: () => void;
-  onConfirm: (password: string) => void;
-}
-
-const TEDConfirmation: React.FC<TEDConfirmationProps> = ({
+const TEDConfirmation = ({
   data,
   type,
   onBack,
   onConfirm,
+}: {
+  data: any;
+  type: "same" | "third" | "judicial";
+  onBack: () => void;
+  onConfirm: () => void;
 }) => {
   const [password, setPassword] = React.useState("");
+  const [error, setError] = React.useState("");
 
   const getTitleByType = (type: string) => {
     switch (type) {
@@ -52,26 +37,18 @@ const TEDConfirmation: React.FC<TEDConfirmationProps> = ({
 
   const handleConfirm = () => {
     if (!password) {
-      Alert.alert("Atenção", "Por favor, digite sua senha de transação.");
+      setError('Senha é obrigatória');
       return;
     }
-    onConfirm(password);
+    
+    if (password.length < 6) {
+      setError('Senha deve ter pelo menos 6 caracteres');
+      return;
+    }
+    
+    setError('');
+    onConfirm();
   };
-
-  const {
-    originAccount,
-    bank,
-    accountType,
-    agency,
-    account,
-    digit,
-    personType,
-    name,
-    cpf,
-    value,
-    purpose,
-    history,
-  } = data;
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -85,20 +62,61 @@ const TEDConfirmation: React.FC<TEDConfirmationProps> = ({
       </Text>
 
       <View style={styles.dataBox}>
-        <InfoItem label="Conta de origem" value={originAccount || "0000-0"} />
-        <InfoItem label="Banco" value={bank} />
-        <InfoItem label="Tipo de conta a ser creditada" value={accountType} />
-        <InfoItem
-          label="Conta destino"
-          value={`${agency || "----"}-${account || "----"}-${digit || "-"}`}
-        />
-        <InfoItem label="Tipo de pessoa destino" value={personType} />
-        <InfoItem label="Nome do destinatário" value={name} />
-        <InfoItem label="CPF/CNPJ do destinatário" value={cpf} />
-        <InfoItem label="Valor" value={`R$ ${value}`} />
-        <InfoItem label="Valor da tarifa" value={`R$ 12,00`} />
-        <InfoItem label="Finalidade" value={purpose} />
-        <InfoItem label="Histórico" value={history} />
+        <Text style={styles.label}>Conta de origem</Text>
+        <Text style={styles.value}>{data.originAccount || "0000-0"}</Text>
+
+        <Text style={styles.label}>Banco</Text>
+        <Text style={styles.value}>{data.bank}</Text>
+
+        {type === "judicial" ? (
+          <>
+            <Text style={styles.label}>Identificação do depósito</Text>
+            <Text style={styles.value}>{data.judicialId || data.depositId}</Text>
+
+            <Text style={styles.label}>Valor</Text>
+            <Text style={styles.value}>R$ {data.value}</Text>
+
+            <Text style={styles.label}>Valor da tarifa</Text>
+            <Text style={styles.value}>R$ 12,00</Text>
+          </>
+        ) : (
+          <>
+            <Text style={styles.label}>Tipo de conta a ser creditada</Text>
+            <Text style={styles.value}>{data.accountType}</Text>
+
+            <Text style={styles.label}>Conta destino</Text>
+            <Text style={styles.value}>
+              {data.agency}-{data.account}-{data.digit}
+            </Text>
+
+            {type === "third" && (
+              <>
+                <Text style={styles.label}>Tipo de pessoa destino</Text>
+                <Text style={styles.value}>{data.personType}</Text>
+
+                <Text style={styles.label}>Nome do destinatário</Text>
+                <Text style={styles.value}>{data.name}</Text>
+
+                <Text style={styles.label}>CPF/CNPJ do destinatário</Text>
+                <Text style={styles.value}>{data.cpf}</Text>
+              </>
+            )}
+
+            <Text style={styles.label}>Valor</Text>
+            <Text style={styles.value}>R$ {data.value}</Text>
+
+            <Text style={styles.label}>Valor da tarifa</Text>
+            <Text style={styles.value}>R$ 12,00</Text>
+
+            <>
+              <Text style={styles.label}>Finalidade</Text>
+              <Text style={styles.value}>{data.purpose}</Text>
+
+              <Text style={styles.label}>Histórico</Text>
+              <Text style={styles.value}>{data.history}</Text>
+            </>
+          </>
+        )}
       </View>
 
       <View style={styles.warningBox}>
@@ -114,10 +132,13 @@ const TEDConfirmation: React.FC<TEDConfirmationProps> = ({
         style={styles.passwordInput}
         value={password}
         onChangeText={setPassword}
-        placeholder="Digite sua senha"
       />
+      {error && <Text style={styles.errorText}>{error}</Text>}
 
-      <TouchableOpacity style={styles.confirmButton} onPress={handleConfirm}>
+      <TouchableOpacity
+        style={styles.confirmButton}
+        onPress={handleConfirm}
+      >
         <Text style={styles.confirmText}>Confirmar</Text>
       </TouchableOpacity>
 
@@ -128,17 +149,17 @@ const TEDConfirmation: React.FC<TEDConfirmationProps> = ({
   );
 };
 
-const InfoItem = ({ label, value }: { label: string; value: string }) => (
-  <>
-    <Text style={styles.label}>{label}</Text>
-    <Text style={styles.value}>{value}</Text>
-  </>
-);
-
 const styles = StyleSheet.create({
   container: {
     paddingBottom: 40,
     backgroundColor: "#fff",
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 12,
+    marginTop: -10,
+    marginBottom: 10,
+    paddingHorizontal: 20,
   },
   header: {
     backgroundColor: "#0039A6",

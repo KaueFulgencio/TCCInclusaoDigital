@@ -11,19 +11,18 @@ import {
 
 const TEDSuccess = ({
   data,
+  type,
   onContinue,
 }: {
   data: any;
+  type: "same" | "third" | "judicial";
   onContinue: () => void;
 }) => {
   const currentDate = new Date();
 
-  
-
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
-
         {/* Header superior com título */}
         <View style={styles.titleContainer}>
           <Text style={styles.title}>Comprovante TED</Text>
@@ -68,35 +67,39 @@ const TEDSuccess = ({
 
           <View style={styles.line}>
             <Text style={styles.label}>Conta origem</Text>
-            <Text style={styles.value}>
-              {data.agencia} | {data.operacao} | {data.conta}
-            </Text>
+            <Text style={styles.value}>{data.originAccount}</Text>
           </View>
 
-          <View style={styles.line}>
-            <Text style={styles.label}>Tipo de conta</Text>
-            <Text style={styles.value}>{data.accountType}</Text>
-          </View>
+          {type !== 'judicial' && (
+            <>
+              <View style={styles.line}>
+                <Text style={styles.label}>Tipo de conta</Text>
+                <Text style={styles.value}>{data.accountType}</Text>
+              </View>
 
-          <View style={styles.line}>
-            <Text style={styles.label}>Tipo de pessoa</Text>
-            <Text style={styles.value}>{data.personType}</Text>
-          </View>
+              <View style={styles.line}>
+                <Text style={styles.label}>Tipo de pessoa</Text>
+                <Text style={styles.value}>{data.personType}</Text>
+              </View>
 
-          <View style={styles.line}>
-            <Text style={styles.label}>Nome</Text>
-            <Text style={styles.value}>{data.name}</Text>
-          </View>
+              <View style={styles.line}>
+                <Text style={styles.label}>Nome</Text>
+                <Text style={styles.value}>{data.name}</Text>
+              </View>
 
-          <View style={styles.line}>
-            <Text style={styles.label}>CPF/CNPJ</Text>
-            <Text style={styles.value}>{data.cpf}</Text>
-          </View>
+              <View style={styles.line}>
+                <Text style={styles.label}>CPF/CNPJ</Text>
+                <Text style={styles.value}>{data.cpf}</Text>
+              </View>
+            </>
+          )}
         </View>
 
         {/* Dados do Recebedor */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Dados do Recebedor</Text>
+          <Text style={styles.sectionTitle}>
+            {type === 'judicial' ? 'Dados do Depósito Judicial' : 'Dados do Recebedor'}
+          </Text>
           <View style={styles.underline} />
 
           <View style={styles.line}>
@@ -104,39 +107,51 @@ const TEDSuccess = ({
             <Text style={styles.value}>{data.bank}</Text>
           </View>
 
-          <View style={styles.line}>
-            <Text style={styles.label}>Conta destino</Text>
-            <Text style={styles.value}>
-              {data.agency}-{data.account}-{data.digit}
-            </Text>
-          </View>
+          {type === 'judicial' ? (
+            <View style={styles.line}>
+              <Text style={styles.label}>Identificação do depósito</Text>
+              <Text style={styles.value}>{data.judicialId || data.depositId}</Text>
+            </View>
+          ) : (
+            <>
+              <View style={styles.line}>
+                <Text style={styles.label}>Conta destino</Text>
+                <Text style={styles.value}>
+                  {data.agency}-{data.account}-{data.digit}
+                </Text>
+              </View>
 
-          <View style={styles.line}>
-            <Text style={styles.label}>Tipo de conta</Text>
-            <Text style={styles.value}>{data.accountType}</Text>
-          </View>
+              {type === 'third' && (
+                <>
+                  <View style={styles.line}>
+                    <Text style={styles.label}>Tipo de conta</Text>
+                    <Text style={styles.value}>{data.accountType}</Text>
+                  </View>
 
-          <View style={styles.line}>
-            <Text style={styles.label}>Tipo de pessoa</Text>
-            <Text style={styles.value}>{data.personType}</Text>
-          </View>
+                  <View style={styles.line}>
+                    <Text style={styles.label}>Tipo de pessoa</Text>
+                    <Text style={styles.value}>{data.personType}</Text>
+                  </View>
 
-          <View style={styles.line}>
-            <Text style={styles.label}>Nome</Text>
-            <Text style={styles.value}>{data.name}</Text>
-          </View>
+                  <View style={styles.line}>
+                    <Text style={styles.label}>Nome</Text>
+                    <Text style={styles.value}>{data.name}</Text>
+                  </View>
 
-          <View style={styles.line}>
-            <Text style={styles.label}>CPF/CNPJ</Text>
-            <Text style={styles.value}>{data.cpf}</Text>
-          </View>
+                  <View style={styles.line}>
+                    <Text style={styles.label}>CPF/CNPJ</Text>
+                    <Text style={styles.value}>{data.cpf}</Text>
+                  </View>
+                </>
+              )}
+            </>
+          )}
         </View>
 
         {/* Botão */}
         <TouchableOpacity style={styles.button} onPress={onContinue}>
           <Text style={styles.buttonText}>Continuar</Text>
         </TouchableOpacity>
-
       </ScrollView>
     </SafeAreaView>
   );
@@ -147,7 +162,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-
   titleContainer: {
     backgroundColor: '#0039A6', 
     paddingVertical: 12,
@@ -161,7 +175,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     textAlign: 'left',
   },
-
   headerContainer: {
     backgroundColor: '#0039A6',
     alignItems: 'center',
@@ -171,7 +184,6 @@ const styles = StyleSheet.create({
     width: 140,
     height: 60,
   },
-
   topBox: {
     backgroundColor: '#fff',
     marginHorizontal: 16,
@@ -204,8 +216,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     textAlign: 'center',
   },
-
-  // Mensagem de sucesso
   successContainer: {
     backgroundColor: '#F2F2F2',
     padding: 14,
@@ -218,8 +228,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 16,
   },
-
-  // Seções de dados
   section: {
     backgroundColor: '#fff',
     marginHorizontal: 16,
@@ -239,7 +247,6 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: 12,
   },
-
   line: {
     marginBottom: 12,
   },
@@ -253,7 +260,6 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: 'bold',
   },
-
   button: {
     backgroundColor: '#FF7900',
     padding: 14,
