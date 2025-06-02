@@ -27,6 +27,7 @@
     "react-dom": "19.0.0",
     "react-native": "0.79.2",
     "react-native-gesture-handler": "^2.25.0",
+    "react-native-mask-input": "^1.2.3",
     "react-native-paper": "^5.14.4",
     "react-native-paper-dates": "^0.22.43",
     "react-native-reanimated": "^3.17.5",

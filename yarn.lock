@@ -5760,6 +5760,11 @@ react-native-is-edge-to-edge@^1.1.6, react-native-is-edge-to-edge@1.1.7:
   resolved "https://registry.npmjs.org/react-native-is-edge-to-edge/-/react-native-is-edge-to-edge-1.1.7.tgz"
   integrity sha512-EH6i7E8epJGIcu7KpfXYXiV2JFIYITtq+rVS8uEb+92naMRBdxhTuS8Wn2Q7j9sqyO0B+Xbaaf9VdipIAmGW4w==
 
+react-native-mask-input@^1.2.3:
+  version "1.2.3"
+  resolved "https://registry.npmjs.org/react-native-mask-input/-/react-native-mask-input-1.2.3.tgz"
+  integrity sha512-RWx+gc1EaBslJWR6dsvGdILJ5XvnvZuyEsgJaH9uAMukB3Z9eOlxra1E7Ovck8NSMVcYWpBB/lzojO4LwqqXgA==
+
 react-native-paper-dates@^0.22.43:
   version "0.22.43"
   resolved "https://registry.npmjs.org/react-native-paper-dates/-/react-native-paper-dates-0.22.43.tgz"
@@ -6527,6 +6532,7 @@ tar@^7.4.3:
     react-dom "19.0.0"
     react-native "0.79.2"
     react-native-gesture-handler "^2.25.0"
+    react-native-mask-input "^1.2.3"
     react-native-paper "^5.14.4"
     react-native-paper-dates "^0.22.43"
     react-native-reanimated "^3.17.5"

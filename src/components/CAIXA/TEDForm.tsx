@@ -9,9 +9,8 @@ import {
   Modal,
   FlatList,
 } from "react-native";
-
 import { TransferType } from "../../screens/TEDFlow";
-
+import { bancos } from "../../data/ListaBancos";
 const TEDForm = ({
   type,
   onSubmit,
@@ -21,6 +20,8 @@ const TEDForm = ({
   onSubmit: (data: any) => void;
   onCancel: () => void;
 }) => {
+  const [filteredBanks, setFilteredBanks] = useState<string[]>([]);
+  const [showBankSuggestions, setShowBankSuggestions] = useState(false);
   const initialData: any = {
     bank: "",
     accountType: "",
@@ -45,15 +46,45 @@ const TEDForm = ({
 
   const [form, setForm] = useState(initialData);
   const [dropdownVisible, setDropdownVisible] = useState<
-    "accountType" | "personType" | "purpose" | null
+    "accountType" | "personType" | "purpose" | "bank" | null
   >(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const update = (field: string, value: string) => {
-    setForm({ ...form, [field]: value });
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: "" }));
+    if (field === "bank") {
+      setForm({ ...form, bank: value });
+
+      const filtered = bancos
+        .map((b) => b.nome)
+        .filter((nome) => nome.toLowerCase().includes(value.toLowerCase()));
+
+      setFilteredBanks(filtered);
+      setShowBankSuggestions(value.length > 0 && filtered.length > 0);
     }
+
+    if (field === "value") {
+      const numeric = value.replace(/\D/g, "");
+      const numberValue = Number(numeric) / 100;
+      value = numberValue.toFixed(2);
+    }
+
+    if (field === "cpf") {
+      const numeric = value.replace(/\D/g, "");
+      if (numeric.length <= 11) {
+        value = numeric.replace(
+          /(\d{3})(\d{3})(\d{3})(\d{0,2})/,
+          (_, a, b, c, d) => `${a}.${b}.${c}-${d}`.replace(/[-.]$/, "")
+        );
+      } else {
+        value = numeric.replace(
+          /(\d{2})(\d{3})(\d{3})(\d{4})(\d{0,2})/,
+          (_, a, b, c, d, e) => `${a}.${b}.${c}/${d}-${e}`.replace(/[-./]$/, "")
+        );
+      }
+    }
+
+    setForm({ ...form, [field]: value });
+    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
   const accountTypes = ["Conta Corrente", "Conta Poupança", "Conta Salário"];
@@ -81,6 +112,8 @@ const TEDForm = ({
           update("personType", item);
         } else if (dropdownVisible === "purpose") {
           update("purpose", item);
+        } else if (dropdownVisible === "bank") {
+          update("bank", item);
         }
         setDropdownVisible(null);
       }}
@@ -96,8 +129,16 @@ const TEDForm = ({
     if (type === "judicial") {
       requiredFields.push("judicialId");
     } else {
-      requiredFields.push("accountType", "agency", "account", "digit", "purpose", "transferId", "history");
-      if (type === "third") {
+      requiredFields.push(
+        "accountType",
+        "agency",
+        "account",
+        "digit",
+        "purpose",
+        "transferId",
+        "history"
+      );
+      if (type === "third" || type === "same") {
         requiredFields.push("name", "cpf", "personType");
       }
     }
@@ -124,17 +165,21 @@ const TEDForm = ({
     if (validateForm()) {
       onSubmit({
         ...form,
-        depositId: form.judicialId
+        depositId: form.judicialId,
       });
     }
   };
 
   const getHeaderTitle = () => {
     switch (type) {
-      case "same": return "TED mesma titularidade";
-      case "third": return "TED para terceiros";
-      case "judicial": return "TED Depósito Judicial";
-      default: return "TED";
+      case "same":
+        return "TED mesma titularidade";
+      case "third":
+        return "TED para terceiros";
+      case "judicial":
+        return "TED Depósito Judicial";
+      default:
+        return "TED";
     }
   };
 
@@ -150,33 +195,51 @@ const TEDForm = ({
         keyboardShouldPersistTaps="handled"
       >
         <Text style={styles.title}>
-          {type === "judicial" ? "Dados do Depósito Judicial" : "Dados da conta destino"}
+          {type === "judicial"
+            ? "Dados do Depósito Judicial"
+            : "Dados da conta destino"}
         </Text>
         <View style={styles.titleUnderline} />
 
         <Text style={styles.label}>Banco*</Text>
-        <TextInput
-          style={[styles.underlineInput, errors.bank && styles.errorInput]}
-          value={form.bank}
-          onChangeText={(v) => update("bank", v)}
-        />
+        <TouchableOpacity
+          style={[styles.dropdownInput, errors.bank && styles.errorInput]}
+          onPress={() => setDropdownVisible("bank")}
+        >
+          <Text
+            style={[
+              styles.dropdownInputText,
+              form.bank ? styles.selectedText : null,
+            ]}
+          >
+            {form.bank || "Selecione o banco"}
+          </Text>
+        </TouchableOpacity>
         {errors.bank && <Text style={styles.errorText}>{errors.bank}</Text>}
 
         {type === "judicial" ? (
           <>
             <Text style={styles.label}>Identificação de depósito*</Text>
             <TextInput
-              style={[styles.underlineInput, errors.judicialId && styles.errorInput]}
+              style={[
+                styles.underlineInput,
+                errors.judicialId && styles.errorInput,
+              ]}
               value={form.judicialId}
               onChangeText={(v) => update("judicialId", v)}
             />
-            {errors.judicialId && <Text style={styles.errorText}>{errors.judicialId}</Text>}
+            {errors.judicialId && (
+              <Text style={styles.errorText}>{errors.judicialId}</Text>
+            )}
           </>
         ) : (
           <>
             <Text style={styles.label}>Tipo de conta*</Text>
             <TouchableOpacity
-              style={[styles.dropdownInput, errors.accountType && styles.errorInput]}
+              style={[
+                styles.dropdownInput,
+                errors.accountType && styles.errorInput,
+              ]}
               onPress={() => setDropdownVisible("accountType")}
             >
               <Text
@@ -188,45 +251,69 @@ const TEDForm = ({
                 {form.accountType || "Selecione o tipo de conta"}
               </Text>
             </TouchableOpacity>
-            {errors.accountType && <Text style={styles.errorText}>{errors.accountType}</Text>}
+            {errors.accountType && (
+              <Text style={styles.errorText}>{errors.accountType}</Text>
+            )}
 
             <Text style={styles.label}>Agência - Conta - Dígito*</Text>
             <View style={styles.inlineRow}>
               <View style={styles.inlineInputContainer}>
                 <TextInput
-                  style={[styles.underlineInput, errors.agency && styles.errorInput]}
+                  style={[
+                    styles.underlineInput,
+                    errors.agency && styles.errorInput,
+                  ]}
                   placeholder="Agência"
                   value={form.agency}
                   onChangeText={(v) => update("agency", v)}
                 />
-                {errors.agency && <Text style={styles.smallErrorText}>{errors.agency}</Text>}
+                {errors.agency && (
+                  <Text style={styles.smallErrorText}>{errors.agency}</Text>
+                )}
               </View>
               <View style={styles.inlineInputContainer}>
                 <TextInput
-                  style={[styles.underlineInput, errors.account && styles.errorInput]}
+                  style={[
+                    styles.underlineInput,
+                    errors.account && styles.errorInput,
+                  ]}
                   placeholder="Conta"
                   value={form.account}
                   onChangeText={(v) => update("account", v)}
                 />
-                {errors.account && <Text style={styles.smallErrorText}>{errors.account}</Text>}
+                {errors.account && (
+                  <Text style={styles.smallErrorText}>{errors.account}</Text>
+                )}
               </View>
               <View style={styles.inlineInputContainer}>
                 <TextInput
-                  style={[styles.underlineInput, errors.digit && styles.errorInput]}
+                  style={[
+                    styles.underlineInput,
+                    errors.digit && styles.errorInput,
+                  ]}
                   placeholder="DV"
                   value={form.digit}
                   onChangeText={(v) => update("digit", v)}
                 />
-                {errors.digit && <Text style={styles.smallErrorText}>{errors.digit}</Text>}
+                {errors.digit && (
+                  <Text style={styles.smallErrorText}>{errors.digit}</Text>
+                )}
               </View>
             </View>
 
-            {type === "third" && (
+            {(type === "third" || type === "same") && (
               <>
                 <Text style={styles.label}>Tipo de pessoa*</Text>
                 <TouchableOpacity
-                  style={[styles.dropdownInput, errors.personType && styles.errorInput]}
-                  onPress={() => setDropdownVisible("personType")}
+                  style={[
+                    styles.dropdownInput,
+                    errors.personType && styles.errorInput,
+                    type === "same" && styles.disabledInput,
+                  ]}
+                  onPress={() =>
+                    type !== "same" && setDropdownVisible("personType")
+                  }
+                  disabled={type === "same"}
                 >
                   <Text
                     style={[
@@ -237,23 +324,40 @@ const TEDForm = ({
                     {form.personType}
                   </Text>
                 </TouchableOpacity>
-                {errors.personType && <Text style={styles.errorText}>{errors.personType}</Text>}
+                {errors.personType && (
+                  <Text style={styles.errorText}>{errors.personType}</Text>
+                )}
 
                 <Text style={styles.label}>Nome*</Text>
                 <TextInput
-                  style={[styles.underlineInput, errors.name && styles.errorInput]}
+                  style={[
+                    styles.underlineInput,
+                    errors.name && styles.errorInput,
+                    type === "same" && styles.disabledInput,
+                  ]}
                   value={form.name}
-                  onChangeText={(v) => update("name", v)}
+                  onChangeText={(v) => type !== "same" && update("name", v)}
+                  editable={type !== "same"}
                 />
-                {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
+                {errors.name && (
+                  <Text style={styles.errorText}>{errors.name}</Text>
+                )}
 
                 <Text style={styles.label}>CPF/CNPJ*</Text>
                 <TextInput
-                  style={[styles.underlineInput, errors.cpf && styles.errorInput]}
+                  style={[
+                    styles.underlineInput,
+                    errors.cpf && styles.errorInput,
+                    type === "same" && styles.disabledInput,
+                  ]}
                   value={form.cpf}
-                  onChangeText={(v) => update("cpf", v)}
+                  onChangeText={(v) => type !== "same" && update("cpf", v)}
+                  keyboardType="numeric"
+                  editable={type !== "same"}
                 />
-                {errors.cpf && <Text style={styles.errorText}>{errors.cpf}</Text>}
+                {errors.cpf && (
+                  <Text style={styles.errorText}>{errors.cpf}</Text>
+                )}
               </>
             )}
           </>
@@ -272,7 +376,10 @@ const TEDForm = ({
           <>
             <Text style={styles.label}>Finalidade*</Text>
             <TouchableOpacity
-              style={[styles.dropdownInput, errors.purpose && styles.errorInput]}
+              style={[
+                styles.dropdownInput,
+                errors.purpose && styles.errorInput,
+              ]}
               onPress={() => setDropdownVisible("purpose")}
             >
               <Text
@@ -284,24 +391,37 @@ const TEDForm = ({
                 {form.purpose || "Selecione a finalidade"}
               </Text>
             </TouchableOpacity>
-            {errors.purpose && <Text style={styles.errorText}>{errors.purpose}</Text>}
+            {errors.purpose && (
+              <Text style={styles.errorText}>{errors.purpose}</Text>
+            )}
 
             <Text style={styles.label}>Identificação da transferência*</Text>
             <TextInput
-              style={[styles.underlineInput, errors.transferId && styles.errorInput]}
+              style={[
+                styles.underlineInput,
+                errors.transferId && styles.errorInput,
+              ]}
               value={form.transferId}
               onChangeText={(v) => update("transferId", v)}
             />
-            {errors.transferId && <Text style={styles.errorText}>{errors.transferId}</Text>}
+            {errors.transferId && (
+              <Text style={styles.errorText}>{errors.transferId}</Text>
+            )}
 
             <Text style={styles.label}>Histórico*</Text>
             <TextInput
-              style={[styles.underlineInput, { height: 80 }, errors.history && styles.errorInput]}
+              style={[
+                styles.underlineInput,
+                { height: 80 },
+                errors.history && styles.errorInput,
+              ]}
               multiline
               value={form.history}
               onChangeText={(v) => update("history", v)}
             />
-            {errors.history && <Text style={styles.errorText}>{errors.history}</Text>}
+            {errors.history && (
+              <Text style={styles.errorText}>{errors.history}</Text>
+            )}
           </>
         )}
 
@@ -345,7 +465,6 @@ const TEDForm = ({
         </TouchableOpacity>
       </ScrollView>
 
-      {/* Modal dropdown */}
       <Modal
         visible={dropdownVisible !== null}
         transparent
@@ -360,9 +479,13 @@ const TEDForm = ({
           <View style={styles.modalContainer}>
             <FlatList
               data={
-                dropdownVisible === "accountType" ? accountTypes :
-                dropdownVisible === "personType" ? personTypes : 
-                purposes
+                dropdownVisible === "accountType"
+                  ? accountTypes
+                  : dropdownVisible === "personType"
+                  ? personTypes
+                  : dropdownVisible === "purpose"
+                  ? purposes
+                  : bancos.map((b) => b.nome) 
               }
               keyExtractor={(item) => item}
               renderItem={({ item }) => renderDropdownItem(item)}
@@ -524,19 +647,42 @@ const styles = StyleSheet.create({
     maxHeight: 250,
   },
   errorInput: {
-    borderBottomColor: 'red',
+    borderBottomColor: "red",
   },
   errorText: {
-    color: 'red',
+    color: "red",
     fontSize: 12,
     marginTop: -10,
     marginBottom: 10,
   },
   smallErrorText: {
-    color: 'red',
+    color: "red",
     fontSize: 10,
     marginTop: -8,
     marginBottom: 8,
+  },
+  disabledInput: {
+    opacity: 0.7,
+    backgroundColor: "#f2f2f2",
+  },
+  suggestionBox: {
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 4,
+    maxHeight: 150,
+    marginTop: -10,
+    zIndex: 999,
+    position: "absolute",
+    width: "100%",
+  },
+  suggestionItem: {
+    padding: 10,
+    borderBottomColor: "#eee",
+    borderBottomWidth: 1,
+  },
+  suggestionText: {
+    fontSize: 14,
   },
 });
 
