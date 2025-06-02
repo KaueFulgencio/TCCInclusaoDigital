@@ -13,14 +13,19 @@ const TEDConfirmation = ({
   type,
   onBack,
   onConfirm,
+  clickCount
 }: {
   data: any;
   type: "same" | "third" | "judicial";
   onBack: () => void;
-  onConfirm: () => void;
+  onConfirm: (totalClicks: number) => void;
+  clickCount: number;
 }) => {
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState("");
+  const [localClickCount, setLocalClickCount] = React.useState(0);
+
+  const incrementLocalClick = () => { setLocalClickCount((c) => c + 1); };
 
   const getTitleByType = (type: string) => {
     switch (type) {
@@ -47,7 +52,8 @@ const TEDConfirmation = ({
     }
     
     setError('');
-    onConfirm();
+    const totalClicks = clickCount + localClickCount;
+    onConfirm(totalClicks);
   };
 
   return (
@@ -131,7 +137,10 @@ const TEDConfirmation = ({
         secureTextEntry
         style={styles.passwordInput}
         value={password}
-        onChangeText={setPassword}
+        onChangeText={(text) => {
+          setPassword(text);
+          incrementLocalClick(); 
+        }}
       />
       {error && <Text style={styles.errorText}>{error}</Text>}
 

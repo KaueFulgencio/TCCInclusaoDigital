@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   View,
   Text,
@@ -6,17 +6,27 @@ import {
   StyleSheet,
   SafeAreaView,
   ScrollView,
-} from 'react-native';
-import { TransferType } from '../../screens/TEDFlow';
+} from "react-native";
+import { TransferType } from "../../screens/TEDFlow";
+import { useAccessibility } from "../../context/AccessibilityContext";
 
 const options: { label: string; value: TransferType }[] = [
-  { label: 'TED mesma titularidade', value: 'same' },
-  { label: 'TED para terceiros', value: 'third' },
-  { label: 'TED para Depósito Judicial', value: 'judicial' },
+  { label: "TED mesma titularidade", value: "same" },
+  { label: "TED para terceiros", value: "third" },
+  { label: "TED para Depósito Judicial", value: "judicial" },
 ];
 
-const SelectTEDType = ({ onSelect }: { onSelect: (type: TransferType) => void }) => {
+const SelectTEDType = ({
+  onSelect,
+  clickCount,
+  onClick,
+}: {
+  onSelect: (type: TransferType) => void;
+  clickCount: number;
+  onClick: () => void;
+}) => {
   const [selected, setSelected] = React.useState<TransferType | null>(null);
+  const { uploadAnalyticsToFirebase } = useAccessibility();
 
   const handleContinue = () => {
     if (selected) {
@@ -27,7 +37,10 @@ const SelectTEDType = ({ onSelect }: { onSelect: (type: TransferType) => void })
   return (
     <SafeAreaView style={styles.wrapper}>
       <View style={styles.header}>
-        <Text style={styles.headerText}>Transferência eletrônica disponível</Text>
+        <Text style={styles.headerText}>
+          Transferência eletrônica disponível
+        </Text>
+        <Text style={{ color: "#fff", marginTop: 5 }}>Cliques: {clickCount}</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.container}>
@@ -50,7 +63,10 @@ const SelectTEDType = ({ onSelect }: { onSelect: (type: TransferType) => void })
           <TouchableOpacity
             key={opt.value}
             style={[styles.option, selected === opt.value && styles.selected]}
-            onPress={() => setSelected(opt.value)}
+            onPress={() => {
+              setSelected(opt.value);
+              onClick();
+            }}
           >
             <View style={styles.radioOuter}>
               {selected === opt.value && <View style={styles.radioInner} />}
@@ -61,7 +77,9 @@ const SelectTEDType = ({ onSelect }: { onSelect: (type: TransferType) => void })
 
         <TouchableOpacity
           style={[styles.button, !selected && styles.buttonDisabled]}
-          onPress={handleContinue}
+          onPress={() => {
+            handleContinue();
+          }}
           disabled={!selected}
         >
           <Text style={styles.buttonText}>Continuar</Text>
@@ -74,22 +92,22 @@ const SelectTEDType = ({ onSelect }: { onSelect: (type: TransferType) => void })
 const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   header: {
-    backgroundColor: '#0039A6',
+    backgroundColor: "#0039A6",
     padding: 20,
   },
   headerText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 17,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   container: {
     padding: 20,
   },
   transactionsSection: {
-    backgroundColor: '#F2F2F2',
+    backgroundColor: "#F2F2F2",
     padding: 16,
     borderRadius: 8,
     marginTop: 24,
@@ -97,21 +115,21 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 15,
-    color: '#333',
+    color: "#333",
     marginBottom: 6,
   },
   transactionBox: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   transactionText: {
-    color: '#0071CE',
+    color: "#0071CE",
     fontSize: 15,
   },
   divider: {
     height: 3,
-    backgroundColor: '#D3D3D3',
+    backgroundColor: "#D3D3D3",
     marginTop: 12,
   },
   selectContainer: {
@@ -119,63 +137,63 @@ const styles = StyleSheet.create({
   },
   selectLabel: {
     fontSize: 15,
-    color: '#005CA9',
-    fontWeight: 'bold',
+    color: "#005CA9",
+    fontWeight: "bold",
   },
   underline: {
     height: 3,
-    backgroundColor: '#DDD',
+    backgroundColor: "#DDD",
     marginTop: 6,
   },
   option: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 14,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#DDD',
+    borderColor: "#DDD",
     marginBottom: 14,
-    backgroundColor: '#FFF',
+    backgroundColor: "#FFF",
   },
   selected: {
-    borderColor: '#0039A6',
-    backgroundColor: '#E6F0FF',
+    borderColor: "#0039A6",
+    backgroundColor: "#E6F0FF",
   },
   radioOuter: {
     width: 20,
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: '#0039A6',
+    borderColor: "#0039A6",
     marginRight: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   radioInner: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#0039A6',
+    backgroundColor: "#0039A6",
   },
   optionText: {
     fontSize: 15,
-    color: '#222',
+    color: "#222",
   },
   button: {
-    backgroundColor: '#F39200',
+    backgroundColor: "#F39200",
     padding: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     borderRadius: 8,
     marginTop: 20,
     marginBottom: 30,
   },
   buttonDisabled: {
-    backgroundColor: '#fbc474',
+    backgroundColor: "#fbc474",
   },
   buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: "#fff",
+    fontWeight: "bold",
     fontSize: 16,
   },
 });

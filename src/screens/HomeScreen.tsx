@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { Button } from "react-native-paper";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
@@ -21,6 +21,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   const { fontSize, highContrast, zoomEnabled } = settings;
   const { executionTime, clickCount, lastAccessed } = analytics;
+  const [startTime, setStartTime] = useState<number>(Date.now());
+  const endTime = Date.now();
+    const durationInSeconds = (endTime - startTime) / 1000;
 
   const handleSaveUser = useCallback(async () => {
     try {
@@ -59,7 +62,10 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   const handleUploadAnalytics = useCallback(async () => {
     try {
-      await uploadAnalyticsToFirebase("testUser123");
+      await uploadAnalyticsToFirebase(
+      analytics.clickCount,
+      durationInSeconds
+    );
       alert("Analytics enviados com sucesso!");
     } catch (error) {
       console.error("Erro ao enviar analytics:", error);

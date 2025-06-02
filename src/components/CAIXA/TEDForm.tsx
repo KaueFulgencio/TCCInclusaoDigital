@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import {
   View,
   Text,
@@ -11,17 +11,34 @@ import {
 } from "react-native";
 import { TransferType } from "../../screens/TEDFlow";
 import { bancos } from "../../data/ListaBancos";
+
 const TEDForm = ({
   type,
   onSubmit,
   onCancel,
+  initialClickCount = 0,
+  onClickCountChange,
 }: {
   type: TransferType;
   onSubmit: (data: any) => void;
   onCancel: () => void;
+  initialClickCount?: number;
+  onClickCountChange?: (count: number) => void;
 }) => {
   const [filteredBanks, setFilteredBanks] = useState<string[]>([]);
   const [showBankSuggestions, setShowBankSuggestions] = useState(false);
+  const [clickCount, setClickCount] = useState(initialClickCount);
+
+  const incrementClick = () => {
+    setClickCount((prev) => {
+      const next = prev + 1;
+      if (onClickCountChange) {
+        onClickCountChange(next);
+      }
+      return next;
+    });
+  };
+
   const initialData: any = {
     bank: "",
     accountType: "",
@@ -106,6 +123,7 @@ const TEDForm = ({
     <TouchableOpacity
       style={styles.dropdownItem}
       onPress={() => {
+        incrementClick();
         if (dropdownVisible === "accountType") {
           update("accountType", item);
         } else if (dropdownVisible === "personType") {
@@ -162,6 +180,7 @@ const TEDForm = ({
   };
 
   const handleSubmit = () => {
+    incrementClick();
     if (validateForm()) {
       onSubmit({
         ...form,
@@ -204,7 +223,10 @@ const TEDForm = ({
         <Text style={styles.label}>Banco*</Text>
         <TouchableOpacity
           style={[styles.dropdownInput, errors.bank && styles.errorInput]}
-          onPress={() => setDropdownVisible("bank")}
+          onPress={() => {
+            incrementClick();
+            setDropdownVisible("bank");
+          }}
         >
           <Text
             style={[
@@ -226,6 +248,9 @@ const TEDForm = ({
                 errors.judicialId && styles.errorInput,
               ]}
               value={form.judicialId}
+              onFocus={() => {
+                incrementClick();
+              }}
               onChangeText={(v) => update("judicialId", v)}
             />
             {errors.judicialId && (
@@ -240,7 +265,9 @@ const TEDForm = ({
                 styles.dropdownInput,
                 errors.accountType && styles.errorInput,
               ]}
-              onPress={() => setDropdownVisible("accountType")}
+              onPress={() => {
+                incrementClick(), setDropdownVisible("accountType");
+              }}
             >
               <Text
                 style={[
@@ -265,6 +292,9 @@ const TEDForm = ({
                   ]}
                   placeholder="Agência"
                   value={form.agency}
+                  onFocus={() => {
+                    incrementClick();
+                  }}
                   onChangeText={(v) => update("agency", v)}
                 />
                 {errors.agency && (
@@ -279,6 +309,9 @@ const TEDForm = ({
                   ]}
                   placeholder="Conta"
                   value={form.account}
+                  onFocus={() => {
+                    incrementClick();
+                  }}
                   onChangeText={(v) => update("account", v)}
                 />
                 {errors.account && (
@@ -293,6 +326,9 @@ const TEDForm = ({
                   ]}
                   placeholder="DV"
                   value={form.digit}
+                  onFocus={() => {
+                    incrementClick();
+                  }}
                   onChangeText={(v) => update("digit", v)}
                 />
                 {errors.digit && (
@@ -310,9 +346,10 @@ const TEDForm = ({
                     errors.personType && styles.errorInput,
                     type === "same" && styles.disabledInput,
                   ]}
-                  onPress={() =>
-                    type !== "same" && setDropdownVisible("personType")
-                  }
+                  onPress={() => {
+                    incrementClick();
+                    type !== "same" && setDropdownVisible("personType");
+                  }}
                   disabled={type === "same"}
                 >
                   <Text
@@ -338,6 +375,9 @@ const TEDForm = ({
                   value={form.name}
                   onChangeText={(v) => type !== "same" && update("name", v)}
                   editable={type !== "same"}
+                  onFocus={() => {
+                    incrementClick();
+                  }}
                 />
                 {errors.name && (
                   <Text style={styles.errorText}>{errors.name}</Text>
@@ -354,6 +394,9 @@ const TEDForm = ({
                   onChangeText={(v) => type !== "same" && update("cpf", v)}
                   keyboardType="numeric"
                   editable={type !== "same"}
+                  onFocus={() => {
+                    incrementClick();
+                  }}
                 />
                 {errors.cpf && (
                   <Text style={styles.errorText}>{errors.cpf}</Text>
@@ -368,6 +411,9 @@ const TEDForm = ({
           style={[styles.underlineInput, errors.value && styles.errorInput]}
           keyboardType="numeric"
           value={form.value}
+          onFocus={() => {
+            incrementClick();
+          }}
           onChangeText={(v) => update("value", v)}
         />
         {errors.value && <Text style={styles.errorText}>{errors.value}</Text>}
@@ -380,7 +426,9 @@ const TEDForm = ({
                 styles.dropdownInput,
                 errors.purpose && styles.errorInput,
               ]}
-              onPress={() => setDropdownVisible("purpose")}
+              onPress={() => {
+                incrementClick(), setDropdownVisible("purpose");
+              }}
             >
               <Text
                 style={[
@@ -402,6 +450,9 @@ const TEDForm = ({
                 errors.transferId && styles.errorInput,
               ]}
               value={form.transferId}
+              onFocus={() => {
+                incrementClick();
+              }}
               onChangeText={(v) => update("transferId", v)}
             />
             {errors.transferId && (
@@ -417,6 +468,9 @@ const TEDForm = ({
               ]}
               multiline
               value={form.history}
+              onFocus={() => {
+                incrementClick();
+              }}
               onChangeText={(v) => update("history", v)}
             />
             {errors.history && (
@@ -431,7 +485,9 @@ const TEDForm = ({
             <TouchableOpacity
               key={opt}
               style={styles.option}
-              onPress={() => update("schedule", opt)}
+              onPress={() => {
+                incrementClick(), update("schedule", opt);
+              }}
             >
               <View style={styles.radioWrapper}>
                 <View style={styles.radioCircle}>
@@ -456,11 +512,23 @@ const TEDForm = ({
           </Text>
         </View>
 
-        <TouchableOpacity style={styles.continueButton} onPress={handleSubmit}>
+        <TouchableOpacity
+          style={styles.continueButton}
+          onPress={() => {
+            incrementClick();
+            handleSubmit();
+          }}
+        >
           <Text style={styles.buttonText}>Continuar</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.cancelButton} onPress={onCancel}>
+        <TouchableOpacity
+          style={styles.cancelButton}
+          onPress={() => {
+            incrementClick();
+            onCancel();
+          }}
+        >
           <Text style={styles.cancelText}>Cancelar</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -474,7 +542,9 @@ const TEDForm = ({
         <TouchableOpacity
           style={styles.modalBackground}
           activeOpacity={1}
-          onPressOut={() => setDropdownVisible(null)}
+          onPressOut={() => {
+            incrementClick(), setDropdownVisible(null);
+          }}
         >
           <View style={styles.modalContainer}>
             <FlatList
@@ -485,7 +555,7 @@ const TEDForm = ({
                   ? personTypes
                   : dropdownVisible === "purpose"
                   ? purposes
-                  : bancos.map((b) => b.nome) 
+                  : bancos.map((b) => b.nome)
               }
               keyExtractor={(item) => item}
               renderItem={({ item }) => renderDropdownItem(item)}

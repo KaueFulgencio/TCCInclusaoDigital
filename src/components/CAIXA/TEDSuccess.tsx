@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   SafeAreaView,
   TouchableOpacity,
   ScrollView,
-} from 'react-native';
+} from "react-native";
 
 const TEDSuccess = ({
   data,
@@ -17,8 +17,14 @@ const TEDSuccess = ({
   data: any;
   type: "same" | "third" | "judicial";
   onContinue: () => void;
+  clickCount: number;
+  executionTime: number;
 }) => {
   const currentDate = new Date();
+
+  const handleContinue = async () => {
+    onContinue();
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -31,7 +37,7 @@ const TEDSuccess = ({
         {/* Logo Caixa */}
         <View style={styles.headerContainer}>
           <Image
-            source={require('../../../assets/caixa-logo-01.png')}
+            source={require("../../../assets/caixa-logo-01.png")}
             style={styles.logo}
             resizeMode="contain"
           />
@@ -46,9 +52,9 @@ const TEDSuccess = ({
           <View style={styles.boxRight}>
             <Text style={styles.boxLabel}>Data</Text>
             <Text style={styles.boxValue}>
-              {currentDate.toLocaleDateString('pt-BR')}
-              {'\n'}
-              {currentDate.toLocaleTimeString('pt-BR')}
+              {currentDate.toLocaleDateString("pt-BR")}
+              {"\n"}
+              {currentDate.toLocaleTimeString("pt-BR")}
             </Text>
           </View>
         </View>
@@ -70,7 +76,7 @@ const TEDSuccess = ({
             <Text style={styles.value}>{data.originAccount}</Text>
           </View>
 
-          {type !== 'judicial' && (
+          {type !== "judicial" && (
             <>
               <View style={styles.line}>
                 <Text style={styles.label}>Tipo de conta</Text>
@@ -98,7 +104,9 @@ const TEDSuccess = ({
         {/* Dados do Recebedor */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
-            {type === 'judicial' ? 'Dados do Depósito Judicial' : 'Dados do Recebedor'}
+            {type === "judicial"
+              ? "Dados do Depósito Judicial"
+              : "Dados do Recebedor"}
           </Text>
           <View style={styles.underline} />
 
@@ -107,10 +115,12 @@ const TEDSuccess = ({
             <Text style={styles.value}>{data.bank}</Text>
           </View>
 
-          {type === 'judicial' ? (
+          {type === "judicial" ? (
             <View style={styles.line}>
               <Text style={styles.label}>Identificação do depósito</Text>
-              <Text style={styles.value}>{data.judicialId || data.depositId}</Text>
+              <Text style={styles.value}>
+                {data.judicialId || data.depositId}
+              </Text>
             </View>
           ) : (
             <>
@@ -121,7 +131,7 @@ const TEDSuccess = ({
                 </Text>
               </View>
 
-              {type === 'third' && (
+              {type === "third" && (
                 <>
                   <View style={styles.line}>
                     <Text style={styles.label}>Tipo de conta</Text>
@@ -149,7 +159,7 @@ const TEDSuccess = ({
         </View>
 
         {/* Botão */}
-        <TouchableOpacity style={styles.button} onPress={onContinue}>
+        <TouchableOpacity style={styles.button} onPress={handleContinue}>
           <Text style={styles.buttonText}>Continuar</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -160,24 +170,24 @@ const TEDSuccess = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   titleContainer: {
-    backgroundColor: '#0039A6', 
+    backgroundColor: "#0039A6",
     paddingVertical: 12,
     paddingHorizontal: 16,
-    justifyContent: 'center',
+    justifyContent: "center",
     borderWidth: 1,
   },
   title: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: "#fff",
+    fontWeight: "bold",
     fontSize: 18,
-    textAlign: 'left',
+    textAlign: "left",
   },
   headerContainer: {
-    backgroundColor: '#0039A6',
-    alignItems: 'center',
+    backgroundColor: "#0039A6",
+    alignItems: "center",
     paddingVertical: 40,
   },
   logo: {
@@ -185,91 +195,91 @@ const styles = StyleSheet.create({
     height: 60,
   },
   topBox: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     marginHorizontal: 16,
     borderRadius: 8,
     padding: 16,
     marginTop: -20,
-    flexDirection: 'row',
+    flexDirection: "row",
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
   },
   boxLeft: {
-    width: '70%',
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: "70%",
+    alignItems: "center",
+    justifyContent: "center",
   },
   boxRight: {
-    width: '30%',
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: "30%",
+    alignItems: "center",
+    justifyContent: "center",
   },
   boxLabel: {
-    color: '#0039A6',
+    color: "#0039A6",
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 4,
   },
   boxValue: {
-    fontWeight: 'bold',
-    color: '#111',
+    fontWeight: "bold",
+    color: "#111",
     fontSize: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
   successContainer: {
-    backgroundColor: '#F2F2F2',
+    backgroundColor: "#F2F2F2",
     padding: 14,
     marginHorizontal: 0,
     marginTop: 16,
   },
   successText: {
-    color: '#0039A6',
-    fontWeight: 'bold',
-    textAlign: 'center',
+    color: "#0039A6",
+    fontWeight: "bold",
+    textAlign: "center",
     fontSize: 16,
   },
   section: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     marginHorizontal: 16,
     marginTop: 16,
     padding: 12,
     borderRadius: 8,
   },
   sectionTitle: {
-    fontWeight: 'bold',
-    color: '#0039A6',
+    fontWeight: "bold",
+    color: "#0039A6",
     fontSize: 18,
     marginBottom: 4,
   },
   underline: {
     borderBottomWidth: 1,
-    borderBottomColor: '#0039A6',
-    width: '100%',
+    borderBottomColor: "#0039A6",
+    width: "100%",
     marginBottom: 12,
   },
   line: {
     marginBottom: 12,
   },
   label: {
-    color: '#777',
+    color: "#777",
     fontSize: 15,
     marginBottom: 2,
   },
   value: {
-    color: '#111',
+    color: "#111",
     fontSize: 17,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   button: {
-    backgroundColor: '#FF7900',
+    backgroundColor: "#FF7900",
     padding: 14,
     borderRadius: 8,
     margin: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: "#fff",
+    fontWeight: "bold",
     fontSize: 16,
   },
 });

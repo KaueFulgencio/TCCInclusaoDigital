@@ -73,7 +73,10 @@ type AccessibilityContextType = {
   exportCompleteSessionData: () => Promise<any>;
   saveUserToFirebase: (userData: any) => Promise<boolean>;
   saveTransactionToFirebase: (transactionData: any) => Promise<boolean>;
-  uploadAnalyticsToFirebase: (userId?: string) => Promise<boolean>;
+  uploadAnalyticsToFirebase: (
+    clickCount: number,
+    duration: number
+  ) => Promise<boolean>;
 };
 
 const defaultSettings: AccessibilitySettings = {
@@ -106,7 +109,7 @@ const defaultColors: AccessibilityColors = {
   radioButton: "#0066CC",
 };
 
-const AccessibilityContext = createContext<AccessibilityContextType>({
+export const AccessibilityContext = createContext<AccessibilityContextType>({
   settings: defaultSettings,
   colors: defaultColors,
   analytics: defaultAnalytics,
@@ -170,20 +173,14 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const uploadAnalyticsToFirebase = async (userId?: string) => {
+  const uploadAnalyticsToFirebase = async (
+    clickCount: number,
+    executionTime: number
+  ): Promise<boolean> => {
     try {
-      const sessionDuration = analytics.currentSession.endTime
-        ? (analytics.currentSession.endTime -
-            analytics.currentSession.startTime) /
-          1000
-        : null;
-
       const dataToSend = {
-        userId: userId || "anonymous",
-        settings: settings,
-        clickCount: analytics.clickCount,
-        sessionDuration,
-        screenFlow: analytics.currentSession.screenFlow,
+        clickCount,
+        executionTime,
         timestamp: serverTimestamp(),
       };
 
@@ -252,11 +249,18 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const incrementClickCount = () => {
-    setAnalytics((prev) => ({
-      ...prev,
-      clickCount: (prev.clickCount || 0) + 1, 
-      lastAccessed: new Date().toISOString(),
-    }));
+    console.log("Incrementing click count");
+    setAnalytics((prev) => {
+      const newCount = (prev.clickCount || 0) + 1;
+      console.log(
+        `Previous clicks: ${prev.clickCount}, New count: ${newCount}`
+      );
+      return {
+        ...prev,
+        clickCount: newCount,
+        lastAccessed: new Date().toISOString(),
+      };
+    });
   };
 
   const updateExecutionTime = (time: number) => {
