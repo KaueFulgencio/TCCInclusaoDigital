@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:22595453970:android:664729612e35c9097344cb",
+        "mobilesdk_app_id": "1:22595453970:android:115052bba44b03f67344cb",
         "android_client_info": {
-          "package_name": "com.tcc2"
+          "package_name": "com.kauefulgencio.TCCInclusaoDigital"
         }
       },
       "oauth_client": [],
