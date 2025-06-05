@@ -10,10 +10,9 @@ import {
   Pressable,
 } from "react-native";
 import { Button, HelperText } from "react-native-paper";
-import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { TEDScreenNavigationProp } from "../navigation/types";
 import { useAccessibility } from "../context/AccessibilityContext";
-import { initDB, saveLog } from "../services/dbService";
 import TransferTypeSelector from "../components/TransferTypeSelector";
 import BankSelector from "../components/BankSelector";
 import TransferOptionsWithDate from "../components/TransferOptionsWithDate";
@@ -73,7 +72,6 @@ const TEDScreen: React.FC<TEDScreenProps> = ({ navigation }) => {
 
   useEffect(() => {
     (async () => {
-      await initDB();
       startTimeRef.current = Date.now();
     })();
   }, []);

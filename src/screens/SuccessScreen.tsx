@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { View, Text, StyleSheet, Animated, Easing } from "react-native";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { useAccessibility } from "../context/AccessibilityContext";
-import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { Button } from "react-native-paper";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../navigation/types";

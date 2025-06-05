@@ -39,67 +39,65 @@ function NavigatorWithAccessibility() {
   );
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="Home" screenOptions={screenOptions}>
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="Acessibilidade" component={AcessibilidadeScreen} />
-        <Stack.Screen name="TED" component={TEDScreen} />
-        <Stack.Screen name="Confirmation" component={ConfirmScreen} />
-        <Stack.Screen
-          name="Success"
-          component={SuccessScreen}
-          options={{
-            headerShown: false,
-            gestureEnabled: false,
-          }}
-        />
-        <Stack.Screen
-          name="AcessibilidadeHelp"
-          component={AcessibilidadeHelpScreen}
-          options={{ title: "Ajuda" }}
-        />
-        <Stack.Screen
-          name="Pix"
-          component={PixScreen}
-          options={{ title: "Enviar PIX" }}
-        />
-        <Stack.Screen
-          name="History"
-          component={HistoryScreen}
-          options={{ title: "Histórico" }}
-        />
-        <Stack.Screen
-          name="TEDFlow"
-          component={TEDFlow}
-          options={{ title: "Transferência TED CAIXA" }}
-        />
-        <Stack.Screen
-          name="PixCaixaHomeScreen"
-          component={PixCaixaHomeScreen}
-          options={{ title: "Pagar via Pix" }}
-        />
-        <Stack.Screen
-          name="PixCaixaConfirmRecipientScreen"
-          component={PixCaixaConfirmRecipientScreen}
-          options={{ title: "Confirmar destinatário" }}
-        />
-        <Stack.Screen
-          name="PixCaixaConfirmDataScreen"
-          component={PixCaixaConfirmDataScreen}
-          options={{ title: "Confirmar pagamento" }}
-        />
-        <Stack.Screen
-          name="PixCaixaConfirmationScreen"
-          component={PixCaixaConfirmDataScreen}
-          options={{ title: "Confirmar pagamento" }}
-        />
-        <Stack.Screen
-          name="PixCaixaPasswordScreen"
-          component={PixCaixaPasswordScreen}
-          options={{ title: "Senha" }}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <Stack.Navigator initialRouteName="Home" screenOptions={screenOptions}>
+      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name="Acessibilidade" component={AcessibilidadeScreen} />
+      <Stack.Screen name="TED" component={TEDScreen} />
+      <Stack.Screen name="Confirmation" component={ConfirmScreen} />
+      <Stack.Screen
+        name="Success"
+        component={SuccessScreen}
+        options={{
+          headerShown: false,
+          gestureEnabled: false,
+        }}
+      />
+      <Stack.Screen
+        name="AcessibilidadeHelp"
+        component={AcessibilidadeHelpScreen}
+        options={{ title: "Ajuda" }}
+      />
+      <Stack.Screen
+        name="Pix"
+        component={PixScreen}
+        options={{ title: "Enviar PIX" }}
+      />
+      <Stack.Screen
+        name="History"
+        component={HistoryScreen}
+        options={{ title: "Histórico" }}
+      />
+      <Stack.Screen
+        name="TEDFlow"
+        component={TEDFlow}
+        options={{ title: "Transferência TED CAIXA" }}
+      />
+      <Stack.Screen
+        name="PixCaixaHomeScreen"
+        component={PixCaixaHomeScreen}
+        options={{ title: "Pagar via Pix" }}
+      />
+      <Stack.Screen
+        name="PixCaixaConfirmRecipientScreen"
+        component={PixCaixaConfirmRecipientScreen}
+        options={{ title: "Confirmar destinatário" }}
+      />
+      <Stack.Screen
+        name="PixCaixaConfirmDataScreen"
+        component={PixCaixaConfirmDataScreen}
+        options={{ title: "Confirmar pagamento" }}
+      />
+      <Stack.Screen
+        name="PixCaixaConfirmationScreen"
+        component={PixCaixaConfirmDataScreen}
+        options={{ title: "Confirmar pagamento" }}
+      />
+      <Stack.Screen
+        name="PixCaixaPasswordScreen"
+        component={PixCaixaPasswordScreen}
+        options={{ title: "Senha" }}
+      />
+    </Stack.Navigator>
   );
 }
 

@@ -8,7 +8,7 @@ import {
   TextInput,
   Modal,
 } from "react-native";
-import Icon from "react-native-vector-icons/MaterialIcons";
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { PixCaixaHomeScreenNavigationProp } from "../../navigation/types";
 import { useNavigation } from "@react-navigation/native";
 
@@ -137,7 +137,7 @@ export const PixCaixaHomeScreen = () => {
             onPress={() => {}}
             variant="white"
             style={styles.mainButton}
-            icon={<Icon name="qr-code" size={20} color="#000" />}
+            icon={<Icon name="sort" size={20} color="#000" />}
           />
           <RenderButton
             title="Agência e Conta"
@@ -157,14 +157,14 @@ export const PixCaixaHomeScreen = () => {
               onPress={() => {}}
               variant="secondary"
               style={styles.contactButton}
-              icon={<Icon name="person" size={20} color="#0077C1" />}
+              icon={<Icon name="anchor" size={20} color="#0077C1" />}
             />
             <RenderButton
               title="Buscar Chaves no Celular"
               onPress={() => {}}
               variant="secondary"
               style={styles.contactButton}
-              icon={<Icon name="smartphone" size={20} color="#0077C1" />}
+              icon={<Icon name="radio" size={20} color="#0077C1" />}
             />
             <Text style={styles.faleComCaixaText}>fale com a Caixa</Text>
           </View>

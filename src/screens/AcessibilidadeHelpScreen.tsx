@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { useAccessibility } from '../context/AccessibilityContext';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 
 const AcessibilidadeHelpScreen = () => {
   const { settings, colors } = useAccessibility();

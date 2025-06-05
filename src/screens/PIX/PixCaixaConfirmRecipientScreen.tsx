@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
 } from "react-native";
-import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { db } from "../../../firebase";
 
 export const PixCaixaConfirmRecipientScreen = ({ navigation, route }: any) => {

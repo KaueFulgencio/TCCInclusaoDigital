@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, Switch, ActivityIndicator } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { Button } from 'react-native-paper';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { useAccessibility } from '../context/AccessibilityContext';
 import { useNavigation } from '@react-navigation/native';
 

@@ -6,7 +6,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
-import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { useAccessibility } from "../context/AccessibilityContext";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../../firebase";

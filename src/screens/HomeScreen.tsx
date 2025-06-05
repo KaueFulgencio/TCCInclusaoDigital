@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { Button } from "react-native-paper";
-import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../navigation/types";
 import { useAccessibility } from "../context/AccessibilityContext";
@@ -36,10 +36,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       };
 
       await saveUserToFirebase(userData);
-      alert("Usuário salvo com sucesso!");
     } catch (error) {
       console.error("Erro ao salvar usuário:", error);
-      alert("Erro ao salvar usuário");
     }
   }, [saveUserToFirebase, settings]);
 
@@ -53,10 +51,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       };
 
       await saveTransactionToFirebase(transactionData);
-      alert("Transação teste salva com sucesso!");
     } catch (error) {
       console.error("Erro ao salvar transação:", error);
-      alert("Erro ao salvar transação");
     }
   }, [saveTransactionToFirebase]);
 
@@ -66,10 +62,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       analytics.clickCount,
       durationInSeconds
     );
-      alert("Analytics enviados com sucesso!");
     } catch (error) {
       console.error("Erro ao enviar analytics:", error);
-      alert("Erro ao enviar analytics");
     }
   }, [uploadAnalyticsToFirebase]);
 

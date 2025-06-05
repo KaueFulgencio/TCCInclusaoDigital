@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { DatePickerModal } from "react-native-paper-dates";
 import { textos } from "../data/textos";
 import { useAccessibility } from "../context/AccessibilityContext";

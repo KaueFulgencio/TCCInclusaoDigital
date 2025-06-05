@@ -26,13 +26,11 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "permissions": [
-        "INTERNET",
-        "ACCESS_NETWORK_STATE"
-      ],
+      "permissions": ["INTERNET", "ACCESS_NETWORK_STATE"],
       "googleServicesFile": "./google-services.json",
       "package": "com.kauefulgencio.TCCInclusaoDigital"
     },
+    "plugins": ["expo-font", "expo-asset"],
     "web": {
       "favicon": "./assets/favicon.png"
     },

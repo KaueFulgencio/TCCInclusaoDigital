@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "22595453970",
+    "project_id": "tcc2-c5833",
+    "storage_bucket": "tcc2-c5833.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:22595453970:android:115052bba44b03f67344cb",
+        "android_client_info": {
+          "package_name": "com.kauefulgencio.TCCInclusaoDigital"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDt_HFUhD89-RJQ0CgtJs5MUf7XSl3U1Vg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
