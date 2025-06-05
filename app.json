@@ -6,14 +6,18 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.kauefulgencio.TCCInclusaoDigital",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -21,27 +25,20 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "permissions": ["INTERNET", "ACCESS_NETWORK_STATE"],
-      "googleServicesFile": "./google-services.json"
+      "permissions": [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE"
+      ],
+      "googleServicesFile": "./google-services.json",
+      "package": "com.kauefulgencio.TCCInclusaoDigital"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": [
-      [
-        "@react-native-firebase/app",
-        {
-          "firebaseConfig": {
-            "apiKey": "AIzaSyB2h0-B89Udnwc9jK8dZxO9BRx2x7MoJms",
-            "authDomain": "tcc2-c5833.firebaseapp.com",
-            "projectId": "tcc2-c5833",
-            "storageBucket": "tcc2-c5833.appspot.com",
-            "messagingSenderId": "22595453970",
-            "appId": "1:22595453970:web:ed9ef4f1fade90ed7344cb",
-            "measurementId": "G-NCNYNKZ8JN"
-          }
-        }
-      ]
-    ]
+    "extra": {
+      "eas": {
+        "projectId": "d2b57a16-5720-4f41-8638-7d82a604903f"
+      }
+    }
   }
 }
