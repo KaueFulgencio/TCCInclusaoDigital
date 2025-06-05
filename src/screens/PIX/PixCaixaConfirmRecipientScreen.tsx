@@ -148,7 +148,9 @@ export const PixCaixaConfirmRecipientScreen = ({ navigation, route }: any) => {
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    backgroundColor: "#FFFFFF", // fundo branco em toda a tela
+    backgroundColor: "#FFFFFF", 
+    flexGrow: 1,
+    minHeight: '100%',
   },
   sectionTitle: {
     fontSize: 20,
