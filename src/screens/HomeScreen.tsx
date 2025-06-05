@@ -144,7 +144,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           size={24 + (zoomEnabled ? 6 : 0)}
           style={dynamicStyles.icon}
         />
-        Transferência Eletrônica (TED)
+        Teste 1 - Transferência Eletrônica (TED)
       </Button>
 
       <Button
@@ -159,7 +159,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           size={24 + (zoomEnabled ? 6 : 0)}
           style={dynamicStyles.icon}
         />
-        Enviar PIX
+        Teste 2 - Enviar PIX
       </Button>
 
       {/* <Button
@@ -234,7 +234,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           size={24 + (zoomEnabled ? 6 : 0)}
           style={dynamicStyles.icon}
         />
-        Fluxo de TED CAIXA
+        Teste 3 - TED CAIXA
       </Button>
 
       <Button
@@ -249,7 +249,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           size={24 + (zoomEnabled ? 6 : 0)}
           style={dynamicStyles.icon}
           />
-          PIX APLICATIVO CAIXA
+          Teste 4 -PIX APLICATIVO CAIXA
       </Button>
 
       <View style={dynamicStyles.analyticsContainer}>

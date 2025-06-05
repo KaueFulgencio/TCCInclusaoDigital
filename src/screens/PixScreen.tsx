@@ -142,7 +142,7 @@ const PixScreen: React.FC<PixScreenProps> = ({ navigation }) => {
             executionTime,
           });
         } else {
-          alert("Ocorreu um erro ao registrar os dados");
+          alert("Erro ao enviar dados. Tente novamente mais tarde.");
         }
       } catch (error) {
         console.error("Erro ao processar transação:", error);
@@ -658,3 +658,7 @@ const styles = StyleSheet.create({
 });
 
 export default PixScreen;
+function alert(arg0: string) {
+  throw new Error("Function not implemented.");
+}
+
