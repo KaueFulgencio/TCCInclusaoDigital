@@ -5,6 +5,7 @@ import { theme } from './src/styles/theme';
 import { AccessibilityProvider } from './src/context/AccessibilityContext';
 
 export default function App() {
+  
   return (
     <ThemeProvider theme={theme}>
       <AccessibilityProvider>
